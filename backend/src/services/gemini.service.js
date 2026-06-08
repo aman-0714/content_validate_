@@ -7,7 +7,7 @@ exports.generateReport = async (title, youtubeResults, redditResults, scores) =>
 
   // Lazy-init: only create the client when actually called
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const ytSummary = youtubeResults.slice(0, 5).map(v =>
     `- "${v.title}" by ${v.channelName} | Views: ${v.viewCount?.toLocaleString()}`
