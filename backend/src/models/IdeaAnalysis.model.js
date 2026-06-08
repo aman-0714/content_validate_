@@ -1,0 +1,72 @@
+const mongoose = require('mongoose');
+
+const IdeaAnalysisSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  title: {
+    type: String,
+    required: [true, 'Content idea title is required'],
+    trim: true
+  },
+  competitionScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
+  demandScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
+  originalityScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
+  viralScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
+  overallScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
+  verdict: {
+    type: String,
+    enum: ['Excellent', 'Good', 'Average', 'Poor'],
+    default: 'Average'
+  },
+  recommendations: [String],
+  betterAngles: [String],
+  youtubeResults: {
+    type: Array,
+    default: []
+  },
+  redditResults: {
+    type: Array,
+    default: []
+  },
+  aiReport: {
+    competitionAnalysis: String,
+    audienceInterestAnalysis: String,
+    originalityAssessment: String,
+    viralPotential: String,
+    suggestedImprovements: String
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+module.exports = mongoose.model('IdeaAnalysis', IdeaAnalysisSchema);
