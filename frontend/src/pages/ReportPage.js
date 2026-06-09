@@ -85,7 +85,8 @@ const ReportPage = () => {
     </div>
   );
 
-  const TABS = ['overview', 'youtube', 'trends', 'ai-report', 'angles'];
+  const TABS = ['overview', 'youtube', 'google trends', 'ai-report', 'angles'];
+  const TAB_LABELS = { 'overview': 'Overview', 'youtube': 'Youtube', 'google trends': 'Google Trends', 'ai-report': 'Ai Report', 'angles': 'Angles' };
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -127,7 +128,7 @@ const ReportPage = () => {
                 activeTab === tab ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
-              {tab === 'ai-report' ? 'Ai Report' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {TAB_LABELS[tab]}
             </button>
           ))}
         </div>
@@ -185,7 +186,7 @@ const ReportPage = () => {
           )}
 
           {/* TRENDS (replaces Reddit) */}
-          {activeTab === 'trends' && (
+          {activeTab === 'google trends' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={20} className="text-green-400" />
