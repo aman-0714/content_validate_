@@ -58,7 +58,7 @@ const LandingPage = () => {
               <span className="ml-2">Loved by creators</span>
             </div>
             <div className="w-px h-4 bg-gray-700" />
-            <span>YouTube + Reddit + AI</span>
+            <span>YouTube + Google Trends + AI</span>
             <div className="w-px h-4 bg-gray-700" />
             <span>Free to start</span>
           </div>
@@ -74,7 +74,7 @@ const LandingPage = () => {
         <div className="grid md:grid-cols-3 gap-8">
           {[
             { step: '01', title: 'Enter Your Idea', desc: 'Type any content topic — blog post, YouTube video, social post, or podcast idea.', icon: '💡' },
-            { step: '02', title: 'We Analyze Everything', desc: 'We search YouTube, Reddit, and use AI to score competition, demand, and originality.', icon: '🔍' },
+            { step: '02', title: 'We Analyze Everything', desc: 'We search YouTube, Google Trends, and use AI to score competition, demand, and originality.', icon: '🔍' },
             { step: '03', title: 'Get Your Report', desc: 'Receive a full report with scores, AI recommendations, and better angle suggestions.', icon: '📊' },
           ].map((item) => (
             <div key={item.step} className="text-center">
@@ -96,8 +96,8 @@ const LandingPage = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <FeatureCard icon={<BarChart3 className="text-violet-400" />} title="4-Metric Scoring" desc="Competition, Demand, Originality, and Viral Potential scores calculated from real data." />
           <FeatureCard icon={<Youtube className="text-red-400" />} title="YouTube Analysis" desc="See top 10 competing videos with view counts, likes, and engagement metrics." />
-          <FeatureCard icon={<MessageCircle className="text-blue-400" />} title="Reddit Insights" desc="Discover community discussions, upvotes, and interest level across subreddits." />
-          <FeatureCard icon={<Brain className="text-emerald-400" />} title="AI Report by Gemini" desc="Google Gemini generates a full analysis with actionable recommendations." />
+          <FeatureCard icon={<MessageCircle className="text-blue-400" />} title="Trend Insights" desc="Discover public interest via Google Trends and Wikipedia pageviews." />
+          <FeatureCard icon={<Brain className="text-emerald-400" />} title="AI Report by Gemini" desc="Groq AI generates a full analysis with actionable recommendations." />
           <FeatureCard icon={<TrendingUp className="text-yellow-400" />} title="Better Angle Generator" desc="Get 5 improved content angles to stand out from the competition." />
           <FeatureCard icon={<Target className="text-pink-400" />} title="Save & Compare" desc="Save all reports to your dashboard and track your content strategy over time." />
         </div>

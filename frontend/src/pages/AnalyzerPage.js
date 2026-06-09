@@ -113,9 +113,9 @@ const AnalyzerPage = () => {
           <div className="grid sm:grid-cols-2 gap-4">
             {[
               { icon: <Target size={18} className="text-orange-400" />, label: 'Competition Score', desc: 'How saturated is this topic on YouTube' },
-              { icon: <TrendingUp size={18} className="text-blue-400" />, label: 'Demand Score', desc: 'Reddit discussions & audience interest' },
+              { icon: <TrendingUp size={18} className="text-blue-400" />, label: 'Demand Score', desc: 'Google Trends & Wikipedia interest signals' },
               { icon: <Zap size={18} className="text-yellow-400" />, label: 'Viral Potential', desc: 'Likelihood of going viral based on data' },
-              { icon: <Brain size={18} className="text-violet-400" />, label: 'AI Full Report', desc: 'Gemini AI analysis with recommendations' },
+              { icon: <Brain size={18} className="text-violet-400" />, label: 'AI Full Report', desc: 'Groq AI analysis with recommendations' },
             ].map((item) => (
               <div key={item.label} className="flex items-start gap-3 p-3 bg-gray-800/50 rounded-xl">
                 <div className="mt-0.5">{item.icon}</div>
