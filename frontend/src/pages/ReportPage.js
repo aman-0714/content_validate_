@@ -5,8 +5,8 @@ import ScoreCard from '../components/ScoreCard';
 import ScoreRadarChart from '../components/ScoreRadarChart';
 import api from '../services/api';
 import {
-  ArrowLeft, Youtube, MessageCircle, Brain, Lightbulb, CheckCircle,
-  ExternalLink, ThumbsUp, Eye, Calendar, TrendingUp, RefreshCw, Zap
+  ArrowLeft, Youtube, TrendingUp, Brain, Lightbulb, CheckCircle,
+  ExternalLink, ThumbsUp, Eye, Calendar, Zap
 } from 'lucide-react';
 
 const VerdictBanner = ({ verdict, overallScore }) => {
@@ -85,7 +85,7 @@ const ReportPage = () => {
     </div>
   );
 
-  const TABS = ['overview', 'youtube', 'reddit', 'ai-report', 'angles'];
+  const TABS = ['overview', 'youtube', 'trends', 'ai-report', 'angles'];
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -107,7 +107,6 @@ const ReportPage = () => {
           <p className="text-gray-500 text-sm">Analyzed on {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
         </div>
 
-        {/* Verdict banner */}
         <VerdictBanner verdict={report.verdict} overallScore={report.overallScore} />
 
         {/* Score cards */}
@@ -128,20 +127,17 @@ const ReportPage = () => {
                 activeTab === tab ? 'bg-violet-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
-              {tab.replace('-', ' ')}
+              {tab === 'ai-report' ? 'Ai Report' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
 
-        {/* Tab content */}
         <div className="fade-in">
 
           {/* OVERVIEW */}
           {activeTab === 'overview' && (
             <div className="grid lg:grid-cols-2 gap-6">
               <ScoreRadarChart scores={report} />
-
-              {/* Recommendations */}
               <div className="card">
                 <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
                   <CheckCircle size={18} className="text-emerald-400" /> Recommendations
@@ -188,12 +184,12 @@ const ReportPage = () => {
             </div>
           )}
 
-          {/* REDDIT */}
-          {activeTab === 'reddit' && (
+          {/* TRENDS (replaces Reddit) */}
+          {activeTab === 'trends' && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
-                <MessageCircle size={20} className="text-orange-400" />
-                <h3 className="text-white font-semibold">Reddit Discussions Found</h3>
+                <TrendingUp size={20} className="text-green-400" />
+                <h3 className="text-white font-semibold">Demand Signals — Google Trends & Wikipedia</h3>
               </div>
               {report.redditResults?.length > 0 ? report.redditResults.map((post, i) => (
                 <div key={i} className="card hover:border-gray-700 transition-all">
@@ -202,26 +198,31 @@ const ReportPage = () => {
                       <a href={post.url} target="_blank" rel="noopener noreferrer" className="text-white font-medium hover:text-violet-400 transition-colors flex items-start gap-1">
                         {post.title} <ExternalLink size={12} className="flex-shrink-0 mt-1" />
                       </a>
-                      <p className="text-violet-400 text-xs mt-1">r/{post.subreddit}</p>
+                      <p className="text-green-400 text-xs mt-1">
+                        {post.source || post.subreddit}
+                      </p>
                     </div>
                   </div>
                   <div className="flex gap-6 mt-3">
-                    <span className="flex items-center gap-1 text-gray-400 text-xs"><ThumbsUp size={12} /> {formatNumber(post.upvotes)} upvotes</span>
-                    <span className="flex items-center gap-1 text-gray-400 text-xs"><MessageCircle size={12} /> {formatNumber(post.commentCount)} comments</span>
+                    <span className="flex items-center gap-1 text-gray-400 text-xs"><TrendingUp size={12} /> Interest score: {formatNumber(Math.round(post.upvotes))}</span>
                     <span className="flex items-center gap-1 text-gray-400 text-xs"><Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString()}</span>
                   </div>
-                  {/* Upvote ratio bar */}
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Upvote ratio</span>
+                      <span>Relevance</span>
                       <span>{Math.round((post.upvoteRatio || 0) * 100)}%</span>
                     </div>
                     <div className="h-1.5 bg-gray-800 rounded-full">
-                      <div className="h-1.5 bg-orange-400 rounded-full" style={{ width: `${(post.upvoteRatio || 0) * 100}%` }} />
+                      <div className="h-1.5 bg-green-400 rounded-full" style={{ width: `${(post.upvoteRatio || 0) * 100}%` }} />
                     </div>
                   </div>
                 </div>
-              )) : <div className="card text-center py-12 text-gray-500">No Reddit data available</div>}
+              )) : (
+                <div className="card text-center py-12">
+                  <TrendingUp size={40} className="text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400">No trend data available for this topic.</p>
+                </div>
+              )}
             </div>
           )}
 
@@ -230,7 +231,7 @@ const ReportPage = () => {
             <div className="space-y-5">
               <div className="flex items-center gap-2 mb-2">
                 <Brain size={20} className="text-violet-400" />
-                <h3 className="text-white font-semibold">AI-Generated Report by Gemini</h3>
+                <h3 className="text-white font-semibold">AI-Generated Report by Groq</h3>
               </div>
               {report.aiReport && Object.keys(report.aiReport).some(k => report.aiReport[k]) ? (
                 <>
@@ -250,7 +251,7 @@ const ReportPage = () => {
               ) : (
                 <div className="card text-center py-12">
                   <Brain size={40} className="text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">AI report unavailable. This may happen if the Gemini API key is not configured.</p>
+                  <p className="text-gray-400">AI report unavailable. Check that GROQ_API_KEY is set on Render.</p>
                 </div>
               )}
             </div>
@@ -282,11 +283,9 @@ const ReportPage = () => {
               ) : (
                 <div className="card text-center py-12">
                   <Lightbulb size={40} className="text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400">No angle suggestions generated. Gemini API may not be configured.</p>
+                  <p className="text-gray-400">No angle suggestions generated.</p>
                 </div>
               )}
-
-              {/* Re-analyze CTA */}
               <div className="card mt-6 text-center bg-gradient-to-r from-violet-900/30 to-indigo-900/30 border-violet-500/20">
                 <p className="text-gray-300 mb-4">Want to validate one of these improved angles?</p>
                 <Link to="/analyzer" className="btn-primary inline-flex items-center gap-2">
