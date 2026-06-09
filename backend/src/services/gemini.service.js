@@ -1,13 +1,11 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const axios = require('axios');
 
+// Replaced Gemini with Groq API (free tier: 14,400 req/day)
 exports.generateReport = async (title, youtubeResults, redditResults, scores) => {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY not configured');
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    throw new Error('GROQ_API_KEY not configured');
   }
-
-  // Lazy-init: only create the client when actually called
-  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
   const ytSummary = youtubeResults.slice(0, 5).map(v =>
     `- "${v.title}" by ${v.channelName} | Views: ${v.viewCount?.toLocaleString()}`
@@ -58,8 +56,31 @@ Respond ONLY with a valid JSON object in this exact format (no markdown, no back
   ]
 }`;
 
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  const response = await axios.post(
+    'https://api.groq.com/openai/v1/chat/completions',
+    {
+      model: 'llama-3.1-8b-instant',
+      max_tokens: 1024,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an expert content strategist. Always respond with valid raw JSON only — no markdown, no backticks.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ]
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  const text = response.data.choices[0].message.content;
 
   const cleaned = text.replace(/```json|```/g, '').trim();
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
