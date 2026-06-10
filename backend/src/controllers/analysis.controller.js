@@ -3,6 +3,7 @@ const redditService = require('../services/reddit.service');
 const geminiService = require('../services/gemini.service');
 const scoringService = require('../services/scoring.service');
 const IdeaAnalysis = require('../models/IdeaAnalysis.model');
+const axios = require('axios');
 
 // @desc    Analyze a content idea
 // @route   POST /api/analysis/analyze
@@ -80,5 +81,202 @@ exports.getAnalysis = async (req, res) => {
     res.json({ success: true, data: analysis });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Enhance a content idea with AI suggestions (keeps original intent, boosts appeal)
+// @route   POST /api/analysis/enhance-idea
+exports.enhanceIdea = async (req, res) => {
+  try {
+    const { idea } = req.body;
+    if (!idea || idea.trim().length < 3) {
+      return res.status(400).json({ success: false, message: 'A content idea is required' });
+    }
+
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ success: false, message: 'AI service not configured' });
+    }
+
+    const prompt = `You are an expert content strategist and SEO specialist. A creator has a content idea and wants you to suggest 5 improved, high-scoring variants.
+
+ORIGINAL IDEA: "${idea.trim()}"
+
+Your task:
+- Keep the SAME core topic and intent as the original idea
+- Make each variant more specific, compelling, and search-friendly
+- Each variant should have a different creative angle (e.g., beginner guide, case study, comparison, "mistakes to avoid", step-by-step)
+- Make titles that people would actually click on YouTube/Google
+- Each variant should score higher than the original in terms of search demand and click appeal
+
+Respond ONLY with valid raw JSON (no markdown, no backticks):
+{
+  "suggestions": [
+    {
+      "title": "Enhanced idea title 1",
+      "reason": "Why this version performs better (1 sentence)"
+    },
+    {
+      "title": "Enhanced idea title 2",
+      "reason": "Why this version performs better (1 sentence)"
+    },
+    {
+      "title": "Enhanced idea title 3",
+      "reason": "Why this version performs better (1 sentence)"
+    },
+    {
+      "title": "Enhanced idea title 4",
+      "reason": "Why this version performs better (1 sentence)"
+    },
+    {
+      "title": "Enhanced idea title 5",
+      "reason": "Why this version performs better (1 sentence)"
+    }
+  ]
+}`;
+
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 800,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert content strategist. Always respond with valid raw JSON only — no markdown, no backticks, no preamble.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const text = response.data.choices[0].message.content;
+    const cleaned = text.replace(/```json|```/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Invalid AI response format');
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    res.json({ success: true, suggestions: parsed.suggestions || [] });
+
+  } catch (error) {
+    console.error('Enhance idea error:', error);
+    res.status(500).json({ success: false, message: 'Failed to enhance idea. Please try again.' });
+  }
+};
+
+// @desc    Get AI suggestions & improvements for an existing analysis
+// @route   POST /api/analysis/:id/suggestions
+exports.getIdeaSuggestions = async (req, res) => {
+  try {
+    const analysis = await IdeaAnalysis.findOne({
+      _id: req.params.id,
+      userId: req.user._id
+    });
+
+    if (!analysis) {
+      return res.status(404).json({ success: false, message: 'Analysis not found' });
+    }
+
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ success: false, message: 'AI service not configured' });
+    }
+
+    const prompt = `You are an expert content strategist. Based on the following analysis data, provide detailed suggestions and improvements to help this content idea score higher and perform better.
+
+CONTENT IDEA: "${analysis.title}"
+
+CURRENT SCORES:
+- Competition Score: ${analysis.competitionScore}/100 (higher = more competition)
+- Demand Score: ${analysis.demandScore}/100
+- Originality Score: ${analysis.originalityScore}/100
+- Viral Potential: ${analysis.viralScore}/100
+- Overall Score: ${analysis.overallScore}/100
+- Verdict: ${analysis.verdict}
+
+Provide actionable, specific suggestions to improve this content idea's performance while keeping the same core topic and intent.
+
+Respond ONLY with valid raw JSON (no markdown, no backticks):
+{
+  "improvedTitles": [
+    {
+      "title": "Improved title variant 1",
+      "scoreBoost": "Which score this improves and why",
+      "angle": "creative angle used (e.g. beginner, advanced, case study, etc.)"
+    },
+    {
+      "title": "Improved title variant 2",
+      "scoreBoost": "Which score this improves and why",
+      "angle": "creative angle used"
+    },
+    {
+      "title": "Improved title variant 3",
+      "scoreBoost": "Which score this improves and why",
+      "angle": "creative angle used"
+    }
+  ],
+  "weaknesses": [
+    "Specific weakness 1 based on the scores",
+    "Specific weakness 2 based on the scores",
+    "Specific weakness 3 based on the scores"
+  ],
+  "strengths": [
+    "Specific strength 1 based on the scores",
+    "Specific strength 2 based on the scores"
+  ],
+  "actionPlan": [
+    "Concrete action step 1 to improve performance",
+    "Concrete action step 2 to improve performance",
+    "Concrete action step 3 to improve performance",
+    "Concrete action step 4 to improve performance"
+  ],
+  "targetAudience": "A specific description of the ideal audience for this content",
+  "bestPlatform": "The best platform to publish this content and why"
+}`;
+
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 1200,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert content strategist. Always respond with valid raw JSON only — no markdown, no backticks.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const text = response.data.choices[0].message.content;
+    const cleaned = text.replace(/```json|```/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Invalid AI response format');
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    res.json({ success: true, data: parsed });
+
+  } catch (error) {
+    console.error('Suggestions error:', error);
+    res.status(500).json({ success: false, message: 'Failed to generate suggestions. Please try again.' });
   }
 };
