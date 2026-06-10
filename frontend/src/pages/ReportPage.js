@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import ScoreCard from '../components/ScoreCard';
 import ScoreRadarChart from '../components/ScoreRadarChart';
+import NextStepsPanel from '../components/NextStepsPanel';
 import api from '../services/api';
 import {
   ArrowLeft, Youtube, TrendingUp, Brain, Lightbulb, CheckCircle,
-  ExternalLink, ThumbsUp, Eye, Calendar, Zap, BarChart2, Target
+  ExternalLink, ThumbsUp, Eye, Calendar, Zap, BarChart2, Target,
+  Copy, Check
 } from 'lucide-react';
 
 // ─── Animated Score Ring (Overall Score in banner) ─────────────────────────
@@ -74,28 +76,32 @@ const AnimatedScoreRing = ({ score, verdict }) => {
 const VerdictBanner = ({ verdict, overallScore }) => {
   const configs = {
     Excellent: {
-      bg: 'from-emerald-950/80 via-emerald-900/30 to-gray-950',
+      grad: 'from-emerald-950 via-teal-900/40 to-gray-950',
+      animated: 'from-emerald-500/10 via-teal-500/5 to-transparent',
       border: 'border-emerald-500/30',
       text: 'text-emerald-400',
       emoji: '🚀',
       msg: 'Outstanding potential. High demand, meaningful gap in the market. Build this now — you have first-mover advantage.'
     },
     Good: {
-      bg: 'from-blue-950/80 via-blue-900/30 to-gray-950',
+      grad: 'from-blue-950 via-blue-900/30 to-gray-950',
+      animated: 'from-blue-500/10 via-indigo-500/5 to-transparent',
       border: 'border-blue-500/30',
       text: 'text-blue-400',
       emoji: '✅',
       msg: 'Solid idea with real audience pull. Needs a sharp, differentiated angle to cut through existing content.'
     },
     Average: {
-      bg: 'from-yellow-950/70 via-yellow-900/20 to-gray-950',
+      grad: 'from-yellow-950 via-orange-900/20 to-gray-950',
+      animated: 'from-yellow-500/10 via-orange-500/5 to-transparent',
       border: 'border-yellow-500/20',
       text: 'text-yellow-400',
       emoji: '⚡',
       msg: 'Decent premise, but the niche is competitive or demand is unclear. A specific sub-angle could unlock this.'
     },
     Poor: {
-      bg: 'from-red-950/70 via-red-900/20 to-gray-950',
+      grad: 'from-red-950 via-red-900/20 to-gray-950',
+      animated: 'from-red-500/10 via-rose-500/5 to-transparent',
       border: 'border-red-500/20',
       text: 'text-red-400',
       emoji: '⚠️',
@@ -105,10 +111,11 @@ const VerdictBanner = ({ verdict, overallScore }) => {
   const c = configs[verdict] || configs.Average;
 
   return (
-    <div className={`bg-gradient-to-r ${c.bg} border ${c.border} rounded-2xl p-6 mb-8 relative overflow-hidden`}>
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none"
-        style={{ background: `radial-gradient(ellipse at 80% 50%, ${c.border.includes('emerald') ? 'rgba(52,211,153,0.04)' : c.border.includes('blue') ? 'rgba(96,165,250,0.04)' : c.border.includes('yellow') ? 'rgba(251,191,36,0.04)' : 'rgba(248,113,113,0.04)'} 0%, transparent 70%)` }}
+    <div className={`bg-gradient-to-r ${c.grad} border ${c.border} rounded-2xl p-6 mb-8 relative overflow-hidden`}>
+      {/* Animated gradient shimmer overlay */}
+      <div
+        className={`absolute inset-0 pointer-events-none bg-gradient-to-r ${c.animated} animated-gradient opacity-60`}
+        style={{ backgroundSize: '200% 200%' }}
       />
       <div className="flex items-center justify-between flex-wrap gap-6 relative">
         <div className="flex-1">
@@ -126,11 +133,9 @@ const VerdictBanner = ({ verdict, overallScore }) => {
 
 // ─── Score Breakdown Card ─────────────────────────────────────────────────────
 
-const BreakdownSection = ({ title, icon, items, color }) => (
-  <div className={`card border-l-4 ${color}`}>
-    <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-      {icon} {title}
-    </h4>
+const BreakdownSection = ({ title, items, color }) => (
+  <div className={`card border-l-4 ${color} fade-in-up`}>
+    <h4 className="text-white font-semibold mb-3">{title}</h4>
     <ul className="space-y-2">
       {items.map((item, i) => (
         <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
@@ -141,6 +146,40 @@ const BreakdownSection = ({ title, icon, items, color }) => (
     </ul>
   </div>
 );
+
+// ─── Copyable Angle Card ──────────────────────────────────────────────────────
+
+const AngleCard = ({ angle, index }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(angle);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
+  };
+
+  return (
+    <div
+      className={`card hover:border-violet-500/50 hover:scale-[1.01] transition-all duration-200 group cursor-pointer fade-in-up delay-${Math.min(index + 1, 5)}`}
+      onClick={handleCopy}
+    >
+      <div className="flex items-start gap-3">
+        <div className="w-8 h-8 bg-violet-500/20 text-violet-400 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm group-hover:bg-violet-500/30 transition-colors">
+          {index + 1}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-medium text-sm">{angle}</p>
+          <div className="flex items-center gap-1 mt-2 text-gray-600 text-xs group-hover:text-violet-500 transition-colors">
+            {copied
+              ? <><Check size={11} className="text-emerald-400" /> <span className="text-emerald-400">Copied!</span></>
+              : <><Copy size={11} /> Click to copy</>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const formatNumber = (n) => {
   if (!n) return '0';
@@ -175,9 +214,19 @@ const ReportPage = () => {
   if (loading) return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
-      <div className="flex flex-col items-center justify-center py-32 gap-4">
-        <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-500 text-sm animate-pulse">Loading your analysis report…</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Skeleton loader */}
+        <div className="h-6 w-40 skeleton mb-6" />
+        <div className="h-10 w-2/3 skeleton mb-2" />
+        <div className="h-4 w-40 skeleton mb-8" />
+        <div className="h-32 skeleton rounded-2xl mb-8" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {[...Array(4)].map((_, i) => <div key={i} className="h-28 skeleton rounded-2xl" />)}
+        </div>
+        <div className="flex items-center justify-center py-8 gap-3">
+          <div className="w-8 h-8 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm animate-pulse">Preparing your analysis…</p>
+        </div>
       </div>
     </div>
   );
@@ -194,17 +243,26 @@ const ReportPage = () => {
     </div>
   );
 
-  const TABS = ['overview', 'youtube', 'google trends', 'ai-report', 'breakdown', 'angles'];
-  const TAB_LABELS = {
-    'overview': 'Overview',
-    'youtube': 'YouTube',
-    'google trends': 'Trends',
-    'ai-report': 'AI Report',
-    'breakdown': 'Score Breakdown',
-    'angles': 'Better Angles'
-  };
+  const TABS = [
+    { key: 'overview',      label: 'Overview',       icon: '📊' },
+    { key: 'next-steps',    label: 'Next Steps',      icon: '🎯' },
+    { key: 'youtube',       label: 'YouTube',         icon: '▶️' },
+    { key: 'google trends', label: 'Trends',          icon: '📈' },
+    { key: 'ai-report',     label: 'AI Report',       icon: '🧠' },
+    { key: 'breakdown',     label: 'Score Breakdown', icon: '🔍' },
+    { key: 'angles',        label: 'Winning Angles',  icon: '💡' },
+  ];
 
   const breakdown = report.breakdown || {};
+
+  // Fix: breakdown bars use 100 as max, not overallScore
+  const weightRows = breakdown.weightExplanation || [
+    `Demand ×0.35 → contributes ${Math.round(report.demandScore * 0.35)} pts`,
+    `Originality ×0.30 → contributes ${Math.round(report.originalityScore * 0.30)} pts`,
+    `Viral Potential ×0.25 → contributes ${Math.round(report.viralScore * 0.25)} pts`,
+    `Low Competition ×0.10 → contributes ${Math.round((100 - report.competitionScore) * 0.10)} pts`,
+  ];
+  const maxPts = 100; // correct denominator
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -212,7 +270,7 @@ const ReportPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 fade-in-up">
           <Link to="/dashboard" className="text-gray-500 hover:text-violet-400 flex items-center gap-1 text-sm transition-colors">
             <ArrowLeft size={14} /> Dashboard
           </Link>
@@ -221,36 +279,45 @@ const ReportPage = () => {
         </div>
 
         {/* Title */}
-        <div className="mb-6">
+        <div className="mb-6 fade-in-up delay-1">
           <h1 className="text-3xl font-bold text-white mb-2">"{report.title}"</h1>
           <p className="text-gray-500 text-sm">
             Analyzed on {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         </div>
 
-        <VerdictBanner verdict={report.verdict} overallScore={report.overallScore} />
+        <div className="fade-in-up delay-2">
+          <VerdictBanner verdict={report.verdict} overallScore={report.overallScore} />
+        </div>
 
         {/* Score Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <ScoreCard label="Competition" score={report.competitionScore} icon="⚔️" description="Higher = more saturated" />
-          <ScoreCard label="Demand" score={report.demandScore} icon="🔥" description="Audience interest level" />
-          <ScoreCard label="Originality" score={report.originalityScore} icon="💡" description="Uniqueness of the angle" />
-          <ScoreCard label="Viral Potential" score={report.viralScore} icon="🚀" description="Likelihood to spread" />
+          {[
+            { label: 'Competition',    score: report.competitionScore, icon: '⚔️', desc: 'Higher = more saturated',   delay: 'delay-1' },
+            { label: 'Demand',         score: report.demandScore,      icon: '🔥', desc: 'Audience interest level',   delay: 'delay-2' },
+            { label: 'Originality',    score: report.originalityScore, icon: '💡', desc: 'Uniqueness of the angle',   delay: 'delay-3' },
+            { label: 'Viral Potential',score: report.viralScore,       icon: '🚀', desc: 'Likelihood to spread',      delay: 'delay-4' },
+          ].map(({ label, score, icon, desc, delay }) => (
+            <div key={label} className={`fade-in-up ${delay}`}>
+              <ScoreCard label={label} score={score} icon={icon} description={desc} />
+            </div>
+          ))}
         </div>
 
         {/* Tabs */}
-        <div className="flex overflow-x-auto gap-1 mb-6 bg-gray-900 border border-gray-800 rounded-xl p-1">
+        <div className="flex overflow-x-auto gap-1 mb-6 bg-gray-900 border border-gray-800 rounded-xl p-1 fade-in-up delay-5">
           {TABS.map(tab => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                activeTab === tab
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                activeTab === tab.key
                   ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
-              {TAB_LABELS[tab]}
+              <span>{tab.icon}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -261,9 +328,9 @@ const ReportPage = () => {
           {activeTab === 'overview' && (
             <div className="grid lg:grid-cols-2 gap-6">
               <ScoreRadarChart scores={report} />
-              <div className="card">
+              <div className="card fade-in-up">
                 <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <CheckCircle size={18} className="text-emerald-400" /> Recommendations
+                  <CheckCircle size={18} className="text-emerald-400" /> AI Recommendations
                 </h3>
                 {report.recommendations?.length > 0 ? (
                   <ul className="space-y-3">
@@ -281,6 +348,17 @@ const ReportPage = () => {
             </div>
           )}
 
+          {/* ─── NEXT STEPS (new) ─── */}
+          {activeTab === 'next-steps' && (
+            <div className="max-w-2xl">
+              <NextStepsPanel
+                recommendations={report.recommendations}
+                verdict={report.verdict}
+                betterAngles={report.betterAngles}
+              />
+            </div>
+          )}
+
           {/* YOUTUBE */}
           {activeTab === 'youtube' && (
             <div className="space-y-4">
@@ -289,7 +367,7 @@ const ReportPage = () => {
                 <h3 className="text-white font-semibold">Top {report.youtubeResults?.length || 0} YouTube Videos Found</h3>
               </div>
               {report.youtubeResults?.length > 0 ? report.youtubeResults.map((video, i) => (
-                <div key={i} className="card hover:border-gray-700 transition-all flex items-start gap-4 group">
+                <div key={i} className={`card hover:border-gray-700 transition-all flex items-start gap-4 group fade-in-up delay-${Math.min(i + 1, 5)}`}>
                   {video.thumbnail && (
                     <img src={video.thumbnail} alt="" className="w-24 h-16 object-cover rounded-lg flex-shrink-0" />
                   )}
@@ -318,7 +396,7 @@ const ReportPage = () => {
                 <h3 className="text-white font-semibold">Demand Signals — Google Trends & Wikipedia</h3>
               </div>
               {report.redditResults?.length > 0 ? report.redditResults.map((post, i) => (
-                <div key={i} className="card hover:border-gray-700 transition-all">
+                <div key={i} className={`card hover:border-gray-700 transition-all fade-in-up delay-${Math.min(i + 1, 5)}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <a href={post.url} target="_blank" rel="noopener noreferrer"
@@ -341,8 +419,8 @@ const ReportPage = () => {
                       <span>Relevance</span>
                       <span>{Math.round((post.upvoteRatio || 0) * 100)}%</span>
                     </div>
-                    <div className="h-1.5 bg-gray-800 rounded-full">
-                      <div className="h-1.5 bg-green-400 rounded-full transition-all duration-700"
+                    <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-green-400 rounded-full bar-fill"
                         style={{ width: `${(post.upvoteRatio || 0) * 100}%` }} />
                     </div>
                   </div>
@@ -366,15 +444,15 @@ const ReportPage = () => {
               {report.aiReport && Object.keys(report.aiReport).some(k => report.aiReport[k]) ? (
                 <>
                   {[
-                    { key: 'competitionAnalysis',      title: '⚔️ Competition Analysis',     color: 'border-orange-500/40' },
-                    { key: 'audienceInterestAnalysis', title: '👥 Audience Interest',         color: 'border-blue-500/40' },
-                    { key: 'originalityAssessment',    title: '💡 Originality & Gap',         color: 'border-yellow-500/40' },
-                    { key: 'viralPotential',           title: '🚀 Viral Potential',           color: 'border-emerald-500/40' },
-                    { key: 'suggestedImprovements',    title: '📈 Suggested Improvements',   color: 'border-violet-500/40' },
+                    { key: 'competitionAnalysis',      title: '⚔️ Competition Analysis',   color: 'border-orange-500/40', delay: 'delay-1' },
+                    { key: 'audienceInterestAnalysis', title: '👥 Audience Interest',        color: 'border-blue-500/40',   delay: 'delay-2' },
+                    { key: 'originalityAssessment',    title: '💡 Originality & Gap',        color: 'border-yellow-500/40', delay: 'delay-3' },
+                    { key: 'viralPotential',           title: '🚀 Viral Potential',          color: 'border-emerald-500/40',delay: 'delay-4' },
+                    { key: 'suggestedImprovements',    title: '📈 Suggested Improvements',  color: 'border-violet-500/40', delay: 'delay-5' },
                   ].map(section => report.aiReport[section.key] && (
-                    <div key={section.key} className={`card border-l-4 ${section.color} hover:border-l-[5px] transition-all duration-200`}>
+                    <div key={section.key} className={`card border-l-4 ${section.color} hover:border-l-[5px] transition-all duration-200 fade-in-up ${section.delay}`}>
                       <h4 className="text-white font-semibold mb-3">{section.title}</h4>
-                      <p className="text-gray-300 leading-relaxed whitespace-pre-line">{report.aiReport[section.key]}</p>
+                      <p className="text-gray-300 leading-relaxed whitespace-pre-line text-sm">{report.aiReport[section.key]}</p>
                     </div>
                   ))}
                 </>
@@ -395,59 +473,53 @@ const ReportPage = () => {
                 <h3 className="text-white font-semibold">Why These Scores? Full Breakdown</h3>
               </div>
 
-              {/* Weight contribution bar */}
-              <div className="card">
-                <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <span>⚖️</span> Score Weight Breakdown
+              {/* Weight contribution bars — fixed to use 100 as max */}
+              <div className="card fade-in-up">
+                <h4 className="text-white font-semibold mb-5 flex items-center gap-2">
+                  ⚖️ Score Weight Breakdown
                 </h4>
-                {(breakdown.weightExplanation || [
-                  `Demand ×0.35 → contributes ${Math.round(report.demandScore * 0.35)} pts`,
-                  `Originality ×0.30 → contributes ${Math.round(report.originalityScore * 0.30)} pts`,
-                  `Viral Potential ×0.25 → contributes ${Math.round(report.viralScore * 0.25)} pts`,
-                  `Low Competition ×0.10 → contributes ${Math.round((100 - report.competitionScore) * 0.10)} pts`
-                ]).map((item, i) => {
+                {weightRows.map((item, i) => {
                   const pts = parseInt(item.match(/(\d+) pts/)?.[1] || 0);
-                  const colors = ['bg-blue-500', 'bg-yellow-500', 'bg-emerald-500', 'bg-violet-500'];
+                  const barColors = ['bg-blue-500', 'bg-yellow-500', 'bg-emerald-500', 'bg-violet-500'];
+                  const pct = Math.min((pts / maxPts) * 100, 100);
                   return (
-                    <div key={i} className="mb-3">
-                      <div className="flex justify-between text-sm mb-1">
+                    <div key={i} className="mb-4">
+                      <div className="flex justify-between text-sm mb-1.5">
                         <span className="text-gray-300">{item.split('→')[0]?.trim()}</span>
                         <span className="text-white font-bold">{pts} pts</span>
                       </div>
-                      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden">
                         <div
-                          className={`h-2 rounded-full ${colors[i]} transition-all duration-700`}
-                          style={{ width: `${(pts / report.overallScore) * 100}%` }}
+                          className={`h-2.5 rounded-full ${barColors[i]} bar-fill`}
+                          style={{ width: `${pct}%` }}
                         />
                       </div>
                     </div>
                   );
                 })}
-                <div className="mt-4 pt-4 border-t border-gray-800 flex justify-between">
+                <div className="mt-5 pt-4 border-t border-gray-800 flex justify-between items-center">
                   <span className="text-gray-400 font-medium">Overall Score</span>
-                  <span className="text-violet-400 font-bold text-lg">{report.overallScore} / 100</span>
+                  <span className="text-violet-400 font-bold text-xl">{report.overallScore} / 100</span>
                 </div>
               </div>
 
               <BreakdownSection
                 title="⚔️ Competition Factors"
-                icon=""
                 items={breakdown.competitionFactors || [`${report.youtubeResults?.length || 0} competing videos found`]}
                 color="border-orange-500/40"
               />
 
               <BreakdownSection
                 title="🔥 Demand Factors"
-                icon=""
                 items={breakdown.demandFactors || [`${report.redditResults?.length || 0} demand signals collected`]}
                 color="border-blue-500/40"
               />
 
-              <div className="card border-l-4 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-transparent">
+              <div className="card border-l-4 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-transparent fade-in-up">
                 <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
                   <Target size={16} className="text-emerald-400" /> 🎯 Market Gaps Detected
                 </h4>
-                <p className="text-gray-500 text-xs mb-3">These are real opportunities identified from the data:</p>
+                <p className="text-gray-500 text-xs mb-3">Real opportunities identified from the data:</p>
                 <ul className="space-y-3">
                   {(breakdown.marketGaps || report.scoreBreakdown?.marketGaps || ['No gap data — rerun the analysis']).map((gap, i) => (
                     <li key={i} className="flex items-start gap-3 text-gray-300 text-sm">
@@ -462,41 +534,55 @@ const ReportPage = () => {
             </div>
           )}
 
-          {/* BETTER ANGLES */}
+          {/* ─── WINNING ANGLES (enhanced) ─── */}
           {activeTab === 'angles' && (
             <div>
-              <div className="flex items-center gap-2 mb-6">
-                <Lightbulb size={20} className="text-yellow-400" />
-                <h3 className="text-white font-semibold">Better Angle Suggestions</h3>
+              <div className="flex items-center justify-between gap-2 mb-6">
+                <div className="flex items-center gap-2">
+                  <Lightbulb size={20} className="text-yellow-400" />
+                  <h3 className="text-white font-semibold">Winning Angles</h3>
+                  {report.betterAngles?.length > 0 && (
+                    <span className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-bold px-2 py-0.5 rounded-full">
+                      {report.betterAngles.length} ideas
+                    </span>
+                  )}
+                </div>
+                {report.betterAngles?.length > 0 && (
+                  <button
+                    onClick={() => navigator.clipboard.writeText(report.betterAngles.join('\n'))}
+                    className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
+                  >
+                    <Copy size={12} /> Copy All
+                  </button>
+                )}
               </div>
+
               {report.betterAngles?.length > 0 ? (
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {report.betterAngles.map((angle, i) => (
-                    <div
-                      key={i}
-                      className="card hover:border-violet-500/50 hover:scale-[1.01] transition-all duration-200 group cursor-pointer"
-                      onClick={() => navigator.clipboard.writeText(angle)}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-violet-500/20 text-violet-400 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm group-hover:bg-violet-500/30 transition-colors">
-                          {i + 1}
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{angle}</p>
-                          <p className="text-gray-600 text-xs mt-2 group-hover:text-violet-500 transition-colors">
-                            Click to copy ↗
-                          </p>
-                        </div>
+                <>
+                  {/* Highlight card for best angle */}
+                  <div className="card mb-4 bg-gradient-to-r from-violet-900/40 to-indigo-900/30 border-violet-500/30 fade-in-up">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">🏆</span>
+                      <div>
+                        <p className="text-violet-300 text-xs font-semibold uppercase tracking-wider mb-1">Top Recommended Angle</p>
+                        <p className="text-white font-semibold">{report.betterAngles[0]}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    {report.betterAngles.map((angle, i) => (
+                      <AngleCard key={i} angle={angle} index={i} />
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="card text-center py-12">
                   <Lightbulb size={40} className="text-gray-600 mx-auto mb-3" />
                   <p className="text-gray-400">No angle suggestions generated.</p>
                 </div>
               )}
+
               <div className="card mt-6 text-center bg-gradient-to-r from-violet-900/30 to-indigo-900/30 border-violet-500/20">
                 <p className="text-gray-300 mb-4">Want to validate one of these improved angles?</p>
                 <Link to="/analyzer" className="btn-primary inline-flex items-center gap-2">

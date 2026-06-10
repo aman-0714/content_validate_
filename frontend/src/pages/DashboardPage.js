@@ -1,16 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
-import { LayoutDashboard, Trash2, Search, BarChart3, TrendingUp, Zap, ExternalLink, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Trash2, Search, BarChart3, TrendingUp, Zap, ExternalLink } from 'lucide-react';
 
+// ─── Animated stat card with count-up ────────────────────────────────────────
+const StatCard = ({ value, label, color, delay }) => {
+  const [display, setDisplay] = useState(0);
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.4 });
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!visible || !value) return;
+    const target = typeof value === 'number' ? value : parseFloat(value) || 0;
+    let current = 0;
+    const step = 16;
+    const inc = target / (800 / step);
+    const t = setInterval(() => {
+      current += inc;
+      if (current >= target) { setDisplay(target); clearInterval(t); }
+      else setDisplay(Math.round(current * 10) / 10);
+    }, step);
+    return () => clearInterval(t);
+  }, [visible, value]);
+
+  return (
+    <div
+      ref={ref}
+      className={`card text-center hover:border-gray-700 hover:scale-[1.02] transition-all duration-300 fade-in-up ${delay}`}
+    >
+      <p className={`text-3xl font-bold ${color} stat-pop`} style={{ animationDelay: delay ? `${parseInt(delay.replace('delay-', '')) * 50}ms` : '0ms' }}>
+        {display}
+      </p>
+      <p className="text-gray-400 text-sm mt-1">{label}</p>
+    </div>
+  );
+};
+
+// ─── Verdict badge ────────────────────────────────────────────────────────────
 const VerdictBadge = ({ verdict }) => {
   const colors = {
     Excellent: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    Good: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    Average: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    Poor: 'bg-red-500/20 text-red-400 border-red-500/30',
+    Good:      'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    Average:   'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+    Poor:      'bg-red-500/20 text-red-400 border-red-500/30',
   };
   return (
     <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${colors[verdict] || colors.Average}`}>
@@ -19,6 +59,17 @@ const VerdictBadge = ({ verdict }) => {
   );
 };
 
+// ─── Mini score bar ───────────────────────────────────────────────────────────
+const MiniScoreBar = ({ score, color }) => (
+  <div className="flex items-center gap-2">
+    <span className={`font-semibold text-sm ${color}`}>{score}</span>
+    <div className="w-10 h-1.5 bg-gray-800 rounded-full overflow-hidden hidden lg:block">
+      <div className={`h-1.5 rounded-full bar-fill ${color.replace('text-', 'bg-')}`} style={{ width: `${score}%` }} />
+    </div>
+  </div>
+);
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 const DashboardPage = () => {
   const { user } = useAuth();
   const [analyses, setAnalyses] = useState([]);
@@ -29,9 +80,7 @@ const DashboardPage = () => {
   const [pagination, setPagination] = useState({});
   const [deleting, setDeleting] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [search, page]);
+  useEffect(() => { fetchData(); }, [search, page]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -64,7 +113,7 @@ const DashboardPage = () => {
     }
   };
 
-  const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -72,42 +121,30 @@ const DashboardPage = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 fade-in-up">
           <div>
             <h1 className="text-3xl font-bold text-white flex items-center gap-3">
               <LayoutDashboard className="text-violet-400" /> Dashboard
             </h1>
             <p className="text-gray-400 mt-1">Welcome back, {user?.name} 👋</p>
           </div>
-          <Link to="/analyzer" className="btn-primary flex items-center gap-2">
+          <Link to="/analyzer" className="btn-primary flex items-center gap-2 glow">
             <Zap size={18} /> New Analysis
           </Link>
         </div>
 
-        {/* Stats row */}
+        {/* Stat cards with count-up */}
         {stats && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="card text-center">
-              <p className="text-3xl font-bold text-violet-400">{stats.total}</p>
-              <p className="text-gray-400 text-sm mt-1">Total Analyses</p>
-            </div>
-            <div className="card text-center">
-              <p className="text-3xl font-bold text-blue-400">{stats.avgOverall}</p>
-              <p className="text-gray-400 text-sm mt-1">Avg. Score</p>
-            </div>
-            <div className="card text-center">
-              <p className="text-3xl font-bold text-emerald-400">{stats.verdicts?.Excellent || 0}</p>
-              <p className="text-gray-400 text-sm mt-1">Excellent Ideas</p>
-            </div>
-            <div className="card text-center">
-              <p className="text-3xl font-bold text-yellow-400">{stats.verdicts?.Good || 0}</p>
-              <p className="text-gray-400 text-sm mt-1">Good Ideas</p>
-            </div>
+            <StatCard value={stats.total}                   label="Total Analyses"  color="text-violet-400"  delay="delay-1" />
+            <StatCard value={stats.avgOverall}              label="Avg. Score"      color="text-blue-400"    delay="delay-2" />
+            <StatCard value={stats.verdicts?.Excellent || 0} label="Excellent Ideas" color="text-emerald-400" delay="delay-3" />
+            <StatCard value={stats.verdicts?.Good || 0}     label="Good Ideas"      color="text-yellow-400"  delay="delay-4" />
           </div>
         )}
 
         {/* Search bar */}
-        <div className="relative mb-6">
+        <div className="relative mb-6 fade-in-up delay-5">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
           <input
             type="text"
@@ -120,11 +157,18 @@ const DashboardPage = () => {
 
         {/* Table */}
         {loading ? (
-          <div className="card flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin" />
+          <div className="card p-0 overflow-hidden">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-gray-800 last:border-0">
+                <div className="flex-1 h-4 skeleton" />
+                <div className="w-10 h-4 skeleton" />
+                <div className="w-10 h-4 skeleton" />
+                <div className="w-16 h-6 skeleton rounded-full" />
+              </div>
+            ))}
           </div>
         ) : analyses.length === 0 ? (
-          <div className="card text-center py-20">
+          <div className="card text-center py-20 fade-in-up">
             <BarChart3 size={48} className="text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 text-lg font-semibold">No analyses yet</p>
             <p className="text-gray-600 text-sm mt-1 mb-6">Validate your first content idea to get started</p>
@@ -133,7 +177,7 @@ const DashboardPage = () => {
             </Link>
           </div>
         ) : (
-          <div className="card overflow-hidden p-0">
+          <div className="card overflow-hidden p-0 fade-in-up">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
@@ -149,15 +193,19 @@ const DashboardPage = () => {
                 </thead>
                 <tbody>
                   {analyses.map((a, i) => (
-                    <tr key={a._id} className={`border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors ${i === analyses.length - 1 ? 'border-0' : ''}`}>
+                    <tr
+                      key={a._id}
+                      className={`border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors fade-in-up ${i === analyses.length - 1 ? 'border-0' : ''}`}
+                      style={{ animationDelay: `${i * 40}ms` }}
+                    >
                       <td className="px-6 py-4">
                         <p className="text-white font-medium text-sm line-clamp-1 max-w-xs">{a.title}</p>
                       </td>
                       <td className="px-4 py-4 text-center hidden md:table-cell">
-                        <span className="text-orange-400 font-semibold text-sm">{a.competitionScore}</span>
+                        <MiniScoreBar score={a.competitionScore} color="text-orange-400" />
                       </td>
                       <td className="px-4 py-4 text-center hidden md:table-cell">
-                        <span className="text-blue-400 font-semibold text-sm">{a.demandScore}</span>
+                        <MiniScoreBar score={a.demandScore} color="text-blue-400" />
                       </td>
                       <td className="px-4 py-4 text-center">
                         <span className="text-violet-400 font-bold text-sm">{a.overallScore}</span>
@@ -170,10 +218,19 @@ const DashboardPage = () => {
                       </td>
                       <td className="px-4 py-4">
                         <div className="flex items-center justify-center gap-2">
-                          <Link to={`/report/${a._id}`} className="text-gray-500 hover:text-violet-400 transition-colors p-1.5 rounded-lg hover:bg-violet-500/10" title="View Report">
+                          <Link
+                            to={`/report/${a._id}`}
+                            className="text-gray-500 hover:text-violet-400 transition-colors p-1.5 rounded-lg hover:bg-violet-500/10"
+                            title="View Report"
+                          >
                             <ExternalLink size={15} />
                           </Link>
-                          <button onClick={() => handleDelete(a._id)} disabled={deleting === a._id} className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10 disabled:opacity-40" title="Delete">
+                          <button
+                            onClick={() => handleDelete(a._id)}
+                            disabled={deleting === a._id}
+                            className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10 disabled:opacity-40"
+                            title="Delete"
+                          >
                             <Trash2 size={15} />
                           </button>
                         </div>
