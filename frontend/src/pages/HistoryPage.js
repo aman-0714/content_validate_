@@ -36,6 +36,7 @@ const HistoryPage = () => {
   const [pagination, setPagination] = useState({});
   const [deleting, setDeleting]   = useState(null);
   const [sharing, setSharing]     = useState(null);
+  const [shareToast, setShareToast] = useState('');
   const [downloading, setDownloading] = useState(null);
 
   useEffect(() => { fetchData(); }, [search, page, filter, sort]);
@@ -74,15 +75,21 @@ const HistoryPage = () => {
     setSharing(id);
     try {
       const res = await api.post(`/export/${id}/share`);
-      // Support both { shareToken } and { data: { shareToken } } response shapes
       const token = res.data?.shareToken || res.data?.data?.shareToken;
       if (!token) throw new Error('No token returned');
       const link = `${window.location.origin}/shared/${token}`;
-      await navigator.clipboard.writeText(link);
-      alert(`✅ Share link copied!\n${link}`);
+      // Try clipboard, fall back to prompt
+      try {
+        await navigator.clipboard.writeText(link);
+        setShareToast('Link copied to clipboard!');
+      } catch {
+        window.prompt('Copy this share link:', link);
+      }
+      setTimeout(() => setShareToast(''), 3000);
     } catch (err) {
       console.error('Share error:', err);
-      alert('Failed to generate share link. Check the console for details.');
+      setShareToast('Failed to generate share link');
+      setTimeout(() => setShareToast(''), 3000);
     } finally { setSharing(null); }
   };
 
@@ -120,6 +127,19 @@ const HistoryPage = () => {
     <div className="min-h-screen bg-gray-950">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        {/* Toast notification */}
+        {shareToast && (
+          <div style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 9999, background: shareToast.includes('Failed') ? '#dc2626' : '#059669',
+            color: 'white', padding: '10px 20px', borderRadius: 10,
+            fontSize: 14, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            whiteSpace: 'nowrap',
+          }}>
+            {shareToast.includes('Failed') ? '❌' : '✅'} {shareToast}
+          </div>
+        )}
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 fade-in-up">
