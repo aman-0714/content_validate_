@@ -214,10 +214,14 @@ const ExportToolbar = ({ reportId, reportTitle, shareToken: initialShareToken })
     setDownloading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/export/${reportId}/pdf`, {
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await fetch(`${API_BASE}/api/export/${reportId}/pdf`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('PDF generation failed');
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Server responded ${response.status}: ${text}`);
+      }
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -228,7 +232,8 @@ const ExportToolbar = ({ reportId, reportTitle, shareToken: initialShareToken })
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (err) {
-      alert('Failed to download PDF. Please try again.');
+      console.error('PDF error:', err);
+      alert(`Failed to download PDF: ${err.message}`);
     } finally {
       setDownloading(false);
     }
@@ -237,10 +242,13 @@ const ExportToolbar = ({ reportId, reportTitle, shareToken: initialShareToken })
   const handleGenerateShare = async () => {
     setSharing(true);
     try {
-      const { data } = await api.post(`/export/${reportId}/share`);
-      setShareToken(data.shareToken);
+      const res = await api.post(`/export/${reportId}/share`);
+      const token = res.data?.shareToken || res.data?.data?.shareToken;
+      if (!token) throw new Error('No share token returned');
+      setShareToken(token);
       setShowSharePanel(true);
     } catch (err) {
+      console.error('Share error:', err);
       alert('Failed to generate share link.');
     } finally {
       setSharing(false);

@@ -73,22 +73,32 @@ const HistoryPage = () => {
   const handleShare = async (id) => {
     setSharing(id);
     try {
-      const { data } = await api.post(`/export/${id}/share`);
-      const link = `${window.location.origin}/shared/${data.shareToken}`;
+      const res = await api.post(`/export/${id}/share`);
+      // Support both { shareToken } and { data: { shareToken } } response shapes
+      const token = res.data?.shareToken || res.data?.data?.shareToken;
+      if (!token) throw new Error('No token returned');
+      const link = `${window.location.origin}/shared/${token}`;
       await navigator.clipboard.writeText(link);
-      alert(`Share link copied!\n${link}`);
-    } catch { alert('Failed to generate share link.'); }
-    finally { setSharing(null); }
+      alert(`✅ Share link copied!\n${link}`);
+    } catch (err) {
+      console.error('Share error:', err);
+      alert('Failed to generate share link. Check the console for details.');
+    } finally { setSharing(null); }
   };
 
   const handleDownloadPDF = async (id, title) => {
     setDownloading(id);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/export/${id}/pdf`, {
+      // Use the same base URL as the api service to avoid host mismatch on production
+      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+      const response = await fetch(`${API_BASE}/api/export/${id}/pdf`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!response.ok) throw new Error('Failed');
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Server responded ${response.status}: ${text}`);
+      }
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -98,8 +108,10 @@ const HistoryPage = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch { alert('PDF generation failed.'); }
-    finally { setDownloading(null); }
+    } catch (err) {
+      console.error('PDF error:', err);
+      alert(`PDF generation failed: ${err.message}`);
+    } finally { setDownloading(null); }
   };
 
   const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
