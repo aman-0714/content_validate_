@@ -401,7 +401,6 @@ const ReportPage = () => {
 
   const TABS = [
     { key: 'overview',      label: 'Overview',       icon: '📊' },
-    { key: 'next-steps',    label: 'Next Steps',      icon: '🎯' },
     { key: 'youtube',       label: 'YouTube',         icon: '▶️' },
     { key: 'google trends', label: 'Trends',          icon: '📈' },
     { key: 'ai-report',     label: 'AI Report',       icon: '🧠' },
