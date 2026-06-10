@@ -22,6 +22,20 @@ exports.generateReport = async (title, youtubeResults, redditResults, scores) =>
     .map(v => `${v.channelName} (${v.viewCount?.toLocaleString()} views)`)
     .join(', ');
 
+  // Detect language/regional gaps from titles
+  const titles = youtubeResults.map(v => (v.title || '').toLowerCase());
+  const hasHindi = titles.some(t => /hindi|हिंदी|हिन्दी/.test(t));
+  const hasBeginnerLevel = titles.some(t => /beginner|basics|introduction|for students/.test(t));
+  const hasShorts = titles.some(t => /shorts|#shorts/.test(t));
+  const langGapNote = !hasHindi ? 'No Hindi-language content detected.' : 'Hindi content exists.';
+  const beginnerGapNote = !hasBeginnerLevel ? 'No beginner/student-level content detected.' : 'Beginner content exists.';
+  const shortsGapNote = !hasShorts ? 'No YouTube Shorts format detected.' : 'Shorts format exists.';
+
+  // Avg engagement ratio
+  const avgLikeViewRatio = youtubeResults.length > 0
+    ? (youtubeResults.reduce((s, v) => s + (v.likeCount || 0) / Math.max(v.viewCount || 1, 1), 0) / youtubeResults.length * 100).toFixed(2)
+    : 'N/A';
+
   const prompt = `You are a venture-backed startup analyst, YouTube growth strategist, and content market researcher with 10 years of experience helping creators find breakout niches.
 
 Analyze this content idea with surgical precision:
@@ -37,6 +51,12 @@ TOP COMPETITORS BY VIEWS: ${topCompetitors || 'None identified'}
 DEMAND SIGNALS: ${redditResults.length} sources found
 ${rdSummary || 'No demand data available'}
 
+CONTENT GAP SIGNALS (pre-detected from titles):
+• ${langGapNote}
+• ${beginnerGapNote}
+• ${shortsGapNote}
+• Avg like-to-view ratio: ${avgLikeViewRatio}%
+
 SCORES:
 • Competition: ${scores.competitionScore}/100 (higher = more saturated)
 • Demand: ${scores.demandScore}/100
@@ -46,51 +66,53 @@ SCORES:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 STRICT RULES:
-1. NEVER say "there is room for creators", "competition is moderate", "this is a great idea" — these are useless.
-2. Name SPECIFIC channels, specific view counts, specific audience segments.
-3. Identify SPECIFIC gaps: missing languages, missing formats (shorts vs long-form), missing difficulty levels, missing platforms.
-4. Every claim must be grounded in the data above.
-5. Think like an investor stress-testing a pitch.
+1. NEVER say "there is room for creators", "competition is moderate", "this is a great idea", "the market is ripe" — these are useless filler phrases.
+2. Name SPECIFIC channels, specific view counts, specific audience segments from the data above.
+3. Identify SPECIFIC gaps: missing languages (Hindi, regional), missing formats (Shorts vs long-form), missing difficulty levels (beginner vs advanced), missing platforms.
+4. Every claim must be grounded in the data above — if a number isn't in the data, don't invent it.
+5. Think like an investor stress-testing a pitch — poke holes, find real risks.
 6. Use bullet points inside text fields where it adds clarity.
+7. If the top competitor has >1M views, call it out explicitly as a barrier.
+8. If avg like-to-view ratio is below 2%, say the audience is watching but not engaged — quality gap.
 
 Respond ONLY with a valid JSON object (no markdown, no backticks, raw JSON only):
 {
   "report": {
-    "competitionAnalysis": "Name the top 2-3 actual competitors from the data with their view counts. State exactly what angle they own and what angle they DON'T cover. Is this niche owned by one dominant channel or fragmented? What format gap exists (e.g. no Hindi content, no beginner-level deep dives, no Shorts)?",
-    "audienceInterestAnalysis": "Name specific audience segments with characteristics (e.g. 'engineering students in Tier 2 Indian cities without coaching access'). Cite which demand signals show the highest engagement. Which platform shows the strongest pull — YouTube, Reddit, search trends?",
-    "originalityAssessment": "What specific content gap exists among the ${youtubeResults.length} videos found? Missing: language? format? depth? platform? niche sub-topic? Give one concrete differentiation strategy that no existing video uses.",
-    "viralPotential": "Name the exact viral hook for this idea. Which platform (YouTube Shorts, Instagram Reels, LinkedIn, Reddit) would make this explode and why. Give a specific content format (e.g. '60-second before/after', 'controversial opinion + data', 'story-driven case study').",
-    "suggestedImprovements": "Give 3 brutally specific improvements: (1) change the angle to X, (2) target Y exact niche audience, (3) use Z specific format or platform. Each must be actionable in 48 hours."
+    "competitionAnalysis": "Name the top 2-3 actual competitors from the data with their exact view counts. State what angle they own and what angle they leave uncovered. Is this niche owned by one dominant channel or fragmented across many? Call out specific format gaps: e.g. no Hindi content, no beginner-level deep dives, no Shorts, no regional accent coverage.",
+    "audienceInterestAnalysis": "Name specific audience segments with real characteristics — e.g. 'engineering students in Tier 2 Indian cities without coaching access' or 'working professionals re-skilling after layoffs'. Cite which demand signals show the highest engagement. Name the platform showing the strongest pull.",
+    "originalityAssessment": "State the specific content gap among the ${youtubeResults.length} videos found. What is missing: language? format? depth? niche sub-topic? Give ONE concrete differentiation strategy no existing video uses — be specific enough that a creator could act on it tomorrow.",
+    "viralPotential": "Name the exact viral hook for this idea. Specify which platform (YouTube Shorts, Instagram Reels, LinkedIn, Reddit) would amplify it and why. Name the specific content format: e.g. '60-second before/after', 'controversial opinion backed by data', 'story-driven case study with a surprising result'.",
+    "suggestedImprovements": "Give 3 brutally specific improvements: (1) change the angle to X targeting Y exact audience, (2) use Z specific format or platform, (3) solve W specific pain point that existing videos ignore. Each must be actionable in 48 hours."
   },
   "recommendations": [
-    "Specific actionable step #1 — name the exact channel, platform, or tool",
-    "Specific actionable step #2 — name the exact format or angle to test first",
-    "Specific actionable step #3 — name the exact underserved audience to target",
-    "Specific actionable step #4 — name the monetization path most viable for this idea",
-    "Specific actionable step #5 — name one risk and how to de-risk it"
+    "Name the exact channel or creator to study and what to copy from their top video",
+    "Name the exact format and angle to test first — one sentence pitch for the video",
+    "Name the exact underserved audience segment and why they are underserved right now",
+    "Name the most viable monetization path: sponsorship niche, course topic, affiliate category",
+    "Name one specific risk and one concrete action to de-risk it before publishing"
   ],
   "betterAngles": [
-    "Rewritten angle #1 — niche + compelling, references a specific audience",
-    "Rewritten angle #2 — different format (e.g. Shorts, documentary, challenge)",
-    "Rewritten angle #3 — underserved language or regional audience",
-    "Rewritten angle #4 — contrarian or data-driven take that challenges assumptions",
-    "Rewritten angle #5 — collaboration or case study format for credibility"
+    "Angle #1: niche + audience-specific reframe that no current video covers",
+    "Angle #2: different format (Shorts, documentary, challenge, reaction) with the same core topic",
+    "Angle #3: regional or language-specific version targeting an underserved audience",
+    "Angle #4: contrarian or data-driven take that directly challenges the most-viewed video's premise",
+    "Angle #5: collaboration or case study format that borrows credibility from an existing audience"
   ],
   "scoreBreakdown": {
     "competitionFactors": [
       "${youtubeResults.length} YouTube videos found competing for this topic",
-      "Top competitor and their approximate dominance",
-      "Upload recency — how actively new content is being published"
+      "Top competitor identified and their approximate dominance level",
+      "Upload recency — how many new videos were published in the last 90 days"
     ],
     "demandFactors": [
       "Community interest level based on ${redditResults.length} demand signals",
-      "Engagement depth — are people watching and interacting or just scrolling past?",
-      "Search trend direction — rising, stable, or declining?"
+      "Engagement depth — like-to-view ratio and what it signals about audience satisfaction",
+      "Search intent — are people looking to learn, compare, or buy?"
     ],
     "marketGaps": [
-      "Most specific underserved format gap detected",
-      "Most specific underserved audience segment detected",
-      "Depth or quality gap in existing content"
+      "Most specific underserved format gap detected from title analysis",
+      "Most specific underserved audience segment with estimated size",
+      "Depth or quality gap in existing content based on engagement data"
     ]
   }
 }`;
@@ -100,11 +122,11 @@ Respond ONLY with a valid JSON object (no markdown, no backticks, raw JSON only)
     {
       model: 'llama-3.3-70b-versatile',
       max_tokens: 2500,
-      temperature: 0.6,
+      temperature: 0.55,
       messages: [
         {
           role: 'system',
-          content: 'You are a sharp startup analyst and YouTube growth strategist. Always respond with valid raw JSON only — no markdown, no backticks, no preamble, no explanations outside the JSON. Be brutally specific. Reference real data. Never use generic AI filler. Name real channels, real gaps, real audiences.'
+          content: 'You are a sharp startup analyst and YouTube growth strategist. Always respond with valid raw JSON only — no markdown, no backticks, no preamble. Be brutally specific. Reference real data from the prompt. Never use generic AI filler phrases. Name real channels, real gaps, real audiences. If you cannot find specific data for a claim, say "data insufficient" rather than inventing details.'
         },
         {
           role: 'user',
