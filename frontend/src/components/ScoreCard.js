@@ -1,161 +1,201 @@
 import React, { useEffect, useRef, useState } from 'react';
 
-// Animated circular progress ring + glassmorphism card
-const ScoreCard = ({ label, score, icon, description }) => {
-  const [displayScore, setDisplayScore] = useState(0);
-  const [isVisible, setIsVisible] = useState(false);
-  const cardRef = useRef(null);
-
-  const getColor = (s) => {
-    if (s >= 75) return {
-      text: 'text-emerald-400',
-      stroke: '#34d399',
-      glow: 'rgba(52,211,153,0.4)',
-      bg: 'from-emerald-500/10 to-emerald-900/5',
-      ring: 'ring-emerald-500/20',
-      badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-      label: 'Excellent'
-    };
-    if (s >= 55) return {
-      text: 'text-blue-400',
-      stroke: '#60a5fa',
-      glow: 'rgba(96,165,250,0.4)',
-      bg: 'from-blue-500/10 to-blue-900/5',
-      ring: 'ring-blue-500/20',
-      badge: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-      label: 'Good'
-    };
-    if (s >= 35) return {
-      text: 'text-yellow-400',
-      stroke: '#fbbf24',
-      glow: 'rgba(251,191,36,0.4)',
-      bg: 'from-yellow-500/10 to-yellow-900/5',
-      ring: 'ring-yellow-500/20',
-      badge: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30',
-      label: 'Average'
-    };
-    return {
-      text: 'text-red-400',
-      stroke: '#f87171',
-      glow: 'rgba(248,113,113,0.4)',
-      bg: 'from-red-500/10 to-red-900/5',
-      ring: 'ring-red-500/20',
-      badge: 'bg-red-500/15 text-red-300 border-red-500/30',
-      label: 'Low'
-    };
+// Tier config: colors, labels, glows
+const getTier = (s) => {
+  if (s >= 75) return {
+    stroke: '#34d399', glow: 'rgba(52,211,153,0.55)',
+    text: '#34d399', badge: 'rgba(52,211,153,0.12)',
+    badgeBorder: 'rgba(52,211,153,0.3)', badgeText: '#6ee7b7',
+    label: 'Excellent', pulse: '#34d399',
   };
+  if (s >= 55) return {
+    stroke: '#818cf8', glow: 'rgba(129,140,248,0.55)',
+    text: '#818cf8', badge: 'rgba(129,140,248,0.12)',
+    badgeBorder: 'rgba(129,140,248,0.3)', badgeText: '#a5b4fc',
+    label: 'Good', pulse: '#818cf8',
+  };
+  if (s >= 35) return {
+    stroke: '#fbbf24', glow: 'rgba(251,191,36,0.55)',
+    text: '#fbbf24', badge: 'rgba(251,191,36,0.12)',
+    badgeBorder: 'rgba(251,191,36,0.3)', badgeText: '#fde68a',
+    label: 'Average', pulse: '#fbbf24',
+  };
+  return {
+    stroke: '#f87171', glow: 'rgba(248,113,113,0.55)',
+    text: '#f87171', badge: 'rgba(248,113,113,0.12)',
+    badgeBorder: 'rgba(248,113,113,0.3)', badgeText: '#fca5a5',
+    label: 'Low', pulse: '#f87171',
+  };
+};
 
-  const colors = getColor(score);
+const ScoreCard = ({ label, score, icon, description }) => {
+  const [display, setDisplay] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const ref = useRef(null);
 
-  // Intersection Observer — animate when card enters viewport
+  const tier = getTier(score);
+
+  // Intersection observer
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setIsVisible(true); },
-      { threshold: 0.3 }
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) setVisible(true); },
+      { threshold: 0.25 }
     );
-    if (cardRef.current) observer.observe(cardRef.current);
-    return () => observer.disconnect();
+    if (ref.current) obs.observe(ref.current);
+    return () => obs.disconnect();
   }, []);
 
-  // Count-up animation
+  // Count-up
   useEffect(() => {
-    if (!isVisible) return;
-    let start = 0;
-    const duration = 1200;
-    const step = 16;
-    const increment = score / (duration / step);
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= score) {
-        setDisplayScore(score);
-        clearInterval(timer);
-      } else {
-        setDisplayScore(Math.round(start));
-      }
-    }, step);
-    return () => clearInterval(timer);
-  }, [isVisible, score]);
+    if (!visible) return;
+    let v = 0;
+    const dur = 1100;
+    const tick = 14;
+    const inc = score / (dur / tick);
+    const t = setInterval(() => {
+      v += inc;
+      if (v >= score) { setDisplay(score); clearInterval(t); }
+      else setDisplay(Math.round(v));
+    }, tick);
+    return () => clearInterval(t);
+  }, [visible, score]);
 
-  // SVG ring math
-  const size = 80;
-  const strokeWidth = 6;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = isVisible ? ((100 - displayScore) / 100) * circumference : circumference;
+  // Ring math
+  const SIZE = 88;
+  const SW = 7;
+  const R = (SIZE - SW) / 2;
+  const CIRC = 2 * Math.PI * R;
+  const offset = visible ? ((100 - display) / 100) * CIRC : CIRC;
 
   return (
     <div
-      ref={cardRef}
-      className={`
-        relative overflow-hidden rounded-2xl p-5
-        bg-gradient-to-br ${colors.bg}
-        border border-gray-800 ring-1 ${colors.ring}
-        hover:border-gray-700 hover:scale-[1.02] hover:shadow-lg
-        transition-all duration-300 ease-out
-        backdrop-blur-sm
-        group
-      `}
+      ref={ref}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        background: 'linear-gradient(135deg, rgba(17,24,39,0.9) 0%, rgba(9,9,11,0.95) 100%)',
-        boxShadow: isVisible ? `0 0 0 1px rgba(75,85,99,0.3), inset 0 1px 0 rgba(255,255,255,0.05)` : 'none'
+        position: 'relative',
+        borderRadius: 20,
+        padding: '18px 18px 16px',
+        background: 'linear-gradient(145deg, #0f1117 0%, #0a0c12 100%)',
+        border: `1px solid ${hovered ? tier.stroke + '44' : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: hovered
+          ? `0 0 0 1px ${tier.stroke}22, 0 8px 32px rgba(0,0,0,0.5), 0 0 20px ${tier.glow.replace('0.55','0.12')}`
+          : '0 2px 12px rgba(0,0,0,0.4)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'all 0.28s cubic-bezier(0.4, 0, 0.2, 1)',
+        overflow: 'hidden',
+        cursor: 'default',
       }}
     >
-      {/* Subtle animated gradient shimmer on hover */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse at 50% 0%, ${colors.glow.replace('0.4', '0.06')} 0%, transparent 70%)`
-        }}
-      />
+      {/* Top-right ambient glow blob */}
+      <div style={{
+        position: 'absolute', top: -20, right: -20,
+        width: 80, height: 80, borderRadius: '50%',
+        background: tier.glow.replace('0.55', hovered ? '0.08' : '0.04'),
+        pointerEvents: 'none',
+        transition: 'background 0.3s',
+      }} />
 
-      <div className="flex items-center justify-between gap-3">
-        {/* Left: label + description */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-lg">{icon}</span>
-            <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide truncate">{label}</p>
-          </div>
-          {description && (
-            <p className="text-gray-600 text-xs leading-tight">{description}</p>
-          )}
-          {/* Rating badge */}
-          <span className={`inline-block mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full border ${colors.badge} uppercase tracking-wider`}>
-            {colors.label}
-          </span>
+      {/* Header row: label + icon */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <span style={{ fontSize: 16, lineHeight: 1 }}>{icon}</span>
+          <span style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+            textTransform: 'uppercase', color: '#6b7280',
+          }}>{label}</span>
         </div>
+        {/* Tier badge */}
+        <span style={{
+          fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
+          textTransform: 'uppercase', padding: '3px 8px', borderRadius: 99,
+          background: tier.badge, border: `1px solid ${tier.badgeBorder}`,
+          color: tier.badgeText,
+        }}>{tier.label}</span>
+      </div>
 
-        {/* Right: animated circular ring */}
-        <div className="flex-shrink-0 relative" style={{ width: size, height: size }}>
-          <svg width={size} height={size} className="rotate-[-90deg]">
+      {/* Ring + description row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        {/* SVG Ring */}
+        <div style={{ position: 'relative', width: SIZE, height: SIZE, flexShrink: 0 }}>
+          <svg
+            width={SIZE} height={SIZE}
+            style={{ transform: 'rotate(-90deg)', display: 'block' }}
+          >
             {/* Track */}
             <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke="rgba(255,255,255,0.06)"
-              strokeWidth={strokeWidth}
+              cx={SIZE / 2} cy={SIZE / 2} r={R}
+              fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={SW}
             />
-            {/* Progress */}
+            {/* Glow duplicate (blurred effect via filter) */}
             <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={colors.stroke}
-              strokeWidth={strokeWidth}
-              strokeLinecap="round"
-              strokeDasharray={circumference}
-              strokeDashoffset={progress}
+              cx={SIZE / 2} cy={SIZE / 2} r={R}
+              fill="none" stroke={tier.stroke}
+              strokeWidth={SW + 4} strokeLinecap="round"
+              strokeDasharray={CIRC} strokeDashoffset={offset}
               style={{
-                transition: 'stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                filter: `drop-shadow(0 0 4px ${colors.glow})`
+                opacity: 0.18,
+                filter: 'blur(4px)',
+                transition: 'stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1)',
+              }}
+            />
+            {/* Main arc */}
+            <circle
+              cx={SIZE / 2} cy={SIZE / 2} r={R}
+              fill="none" stroke={tier.stroke}
+              strokeWidth={SW} strokeLinecap="round"
+              strokeDasharray={CIRC} strokeDashoffset={offset}
+              style={{
+                filter: `drop-shadow(0 0 5px ${tier.glow})`,
+                transition: 'stroke-dashoffset 1.1s cubic-bezier(0.4,0,0.2,1)',
               }}
             />
           </svg>
-          {/* Score in center */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className={`text-xl font-bold leading-none ${colors.text}`}>{displayScore}</span>
-            <span className="text-gray-600 text-[9px] font-medium leading-none mt-0.5">/100</span>
+          {/* Center: score */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+          }}>
+            <span style={{
+              fontSize: 24, fontWeight: 900, lineHeight: 1,
+              color: tier.text,
+              textShadow: `0 0 12px ${tier.glow}`,
+              fontVariantNumeric: 'tabular-nums',
+            }}>{display}</span>
+            <span style={{ fontSize: 9, color: '#4b5563', fontWeight: 600, marginTop: 2 }}>/100</span>
+          </div>
+        </div>
+
+        {/* Right: description + mini bar */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {description && (
+            <p style={{
+              fontSize: 12, color: '#6b7280', lineHeight: 1.4,
+              marginBottom: 10,
+            }}>{description}</p>
+          )}
+          {/* Thin progress bar */}
+          <div style={{
+            height: 4, borderRadius: 99,
+            background: 'rgba(255,255,255,0.06)',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%', borderRadius: 99,
+              width: visible ? `${display}%` : '0%',
+              background: `linear-gradient(90deg, ${tier.stroke}99, ${tier.stroke})`,
+              boxShadow: `0 0 6px ${tier.glow}`,
+              transition: 'width 1.1s cubic-bezier(0.4,0,0.2,1)',
+            }} />
+          </div>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            marginTop: 5,
+          }}>
+            <span style={{ fontSize: 10, color: '#374151' }}>0</span>
+            <span style={{ fontSize: 10, color: '#374151' }}>100</span>
           </div>
         </div>
       </div>

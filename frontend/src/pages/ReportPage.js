@@ -70,27 +70,84 @@ const AnimatedScoreRing = ({ score, verdict }) => {
 
 // ─── Verdict Banner ──────────────────────────────────────────────────────────
 
+const VERDICT_TOKENS = {
+  Excellent: {
+    stroke: '#34d399', glow: 'rgba(52,211,153,0.5)', textColor: '#34d399',
+    bgSpot: 'rgba(52,211,153,0.06)', border: 'rgba(52,211,153,0.22)',
+    label: 'Excellent Idea', emoji: '🚀',
+    msg: 'Outstanding potential. High demand, meaningful gap in the market. Build this now — you have first-mover advantage.',
+    tag: 'Ship it',
+  },
+  Good: {
+    stroke: '#818cf8', glow: 'rgba(129,140,248,0.5)', textColor: '#818cf8',
+    bgSpot: 'rgba(129,140,248,0.06)', border: 'rgba(129,140,248,0.22)',
+    label: 'Good Idea', emoji: '✅',
+    msg: 'Solid idea with real audience pull. Needs a sharp, differentiated angle to cut through existing content.',
+    tag: 'Worth building',
+  },
+  Average: {
+    stroke: '#fbbf24', glow: 'rgba(251,191,36,0.5)', textColor: '#fbbf24',
+    bgSpot: 'rgba(251,191,36,0.06)', border: 'rgba(251,191,36,0.22)',
+    label: 'Average Idea', emoji: '⚡',
+    msg: 'Decent premise, but the niche is competitive or demand is unclear. A specific sub-angle could unlock this.',
+    tag: 'Needs a pivot',
+  },
+  Poor: {
+    stroke: '#f87171', glow: 'rgba(248,113,113,0.5)', textColor: '#f87171',
+    bgSpot: 'rgba(248,113,113,0.06)', border: 'rgba(248,113,113,0.22)',
+    label: 'Weak Idea', emoji: '⚠️',
+    msg: 'High competition or weak demand signals. Pivot the angle, target a narrower audience, or choose a different topic.',
+    tag: 'Validate first',
+  },
+};
+
 const VerdictBanner = ({ verdict, overallScore }) => {
-  const configs = {
-    Excellent: { grad: 'from-emerald-950 via-teal-900/40 to-gray-950', animated: 'from-emerald-500/10 via-teal-500/5 to-transparent', border: 'border-emerald-500/30', text: 'text-emerald-400', emoji: '🚀', msg: 'Outstanding potential. High demand, meaningful gap in the market. Build this now — you have first-mover advantage.' },
-    Good:      { grad: 'from-blue-950 via-blue-900/30 to-gray-950',    animated: 'from-blue-500/10 via-indigo-500/5 to-transparent',   border: 'border-blue-500/30',    text: 'text-blue-400',    emoji: '✅', msg: 'Solid idea with real audience pull. Needs a sharp, differentiated angle to cut through existing content.' },
-    Average:   { grad: 'from-yellow-950 via-orange-900/20 to-gray-950',animated: 'from-yellow-500/10 via-orange-500/5 to-transparent',  border: 'border-yellow-500/20',  text: 'text-yellow-400',  emoji: '⚡', msg: 'Decent premise, but the niche is competitive or demand is unclear. A specific sub-angle could unlock this.' },
-    Poor:      { grad: 'from-red-950 via-red-900/20 to-gray-950',      animated: 'from-red-500/10 via-rose-500/5 to-transparent',       border: 'border-red-500/20',     text: 'text-red-400',     emoji: '⚠️', msg: 'High competition or weak demand signals. Pivot the angle, target a narrower audience, or choose a different topic.' },
-  };
-  const c = configs[verdict] || configs.Average;
+  const t = VERDICT_TOKENS[verdict] || VERDICT_TOKENS.Average;
 
   return (
-    <div className={`bg-gradient-to-r ${c.grad} border ${c.border} rounded-2xl p-6 mb-8 relative overflow-hidden`}>
-      <div className={`absolute inset-0 pointer-events-none bg-gradient-to-r ${c.animated} animated-gradient opacity-60`} style={{ backgroundSize: '200% 200%' }} />
-      <div className="flex items-center justify-between flex-wrap gap-6 relative">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-3xl">{c.emoji}</span>
-            <span className={`text-2xl font-bold ${c.text}`}>{verdict} Idea</span>
+    <div
+      style={{
+        position: 'relative',
+        borderRadius: 20,
+        padding: '28px 28px',
+        marginBottom: 32,
+        overflow: 'hidden',
+        background: 'linear-gradient(145deg, #0d1017 0%, #080a0f 100%)',
+        border: `1px solid ${t.border}`,
+        boxShadow: `0 0 40px ${t.bgSpot}, inset 0 1px 0 rgba(255,255,255,0.04)`,
+      }}
+      className="fade-in-up"
+    >
+      <div style={{
+        position: 'absolute', top: -40, right: -40,
+        width: 180, height: 180, borderRadius: '50%',
+        background: `radial-gradient(circle, ${t.glow.replace('0.5','0.10')} 0%, transparent 70%)`,
+        pointerEvents: 'none',
+      }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <span style={{
+            display: 'inline-block',
+            fontSize: 10, fontWeight: 800, letterSpacing: '0.1em',
+            textTransform: 'uppercase', padding: '4px 12px', borderRadius: 99,
+            background: t.bgSpot, border: `1px solid ${t.border}`,
+            color: t.textColor, marginBottom: 14,
+          }}>{t.tag}</span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+            <span style={{ fontSize: 28, lineHeight: 1 }}>{t.emoji}</span>
+            <span style={{ fontSize: 26, fontWeight: 800, color: t.textColor, letterSpacing: '-0.02em' }}>
+              {t.label}
+            </span>
           </div>
-          <p className="text-gray-300 text-sm leading-relaxed max-w-xl">{c.msg}</p>
+          <p style={{ fontSize: 14, color: '#9ca3af', lineHeight: 1.6, maxWidth: 480 }}>{t.msg}</p>
         </div>
-        <AnimatedScoreRing score={overallScore} verdict={verdict} />
+
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <AnimatedScoreRing score={overallScore} verdict={verdict} />
+          <p style={{ fontSize: 10, color: '#4b5563', marginTop: 4, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Overall Score</p>
+        </div>
       </div>
     </div>
   );
