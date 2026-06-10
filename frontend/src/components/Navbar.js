@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, LayoutDashboard, User, LogOut, Menu, X } from 'lucide-react';
+import { Zap, LayoutDashboard, User, LogOut, Menu, X, History } from 'lucide-react';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -31,6 +31,9 @@ const Navbar = () => {
               <>
                 <Link to="/dashboard" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-gray-800">
                   <LayoutDashboard size={16} /> Dashboard
+                </Link>
+                <Link to="/history" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-gray-800">
+                  <History size={16} /> History
                 </Link>
                 <Link to="/analyzer" className="btn-primary py-2 px-4 text-sm">
                   + New Analysis
@@ -66,14 +69,15 @@ const Navbar = () => {
           {user ? (
             <>
               <Link to="/dashboard" className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Dashboard</Link>
-              <Link to="/analyzer" className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>New Analysis</Link>
-              <Link to="/profile" className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Profile</Link>
+              <Link to="/history"   className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>History</Link>
+              <Link to="/analyzer"  className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>New Analysis</Link>
+              <Link to="/profile"   className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Profile</Link>
               <button onClick={handleLogout} className="block text-red-400 py-2">Logout</button>
             </>
           ) : (
             <>
-              <Link to="/login" className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Login</Link>
-              <Link to="/signup" className="block text-violet-400 hover:text-violet-300 py-2 font-semibold" onClick={() => setMenuOpen(false)}>Get Started</Link>
+              <Link to="/login"   className="block text-gray-300 hover:text-white py-2" onClick={() => setMenuOpen(false)}>Login</Link>
+              <Link to="/signup"  className="block text-violet-400 hover:text-violet-300 py-2 font-semibold" onClick={() => setMenuOpen(false)}>Get Started</Link>
             </>
           )}
         </div>

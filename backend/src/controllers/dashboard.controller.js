@@ -4,19 +4,26 @@ const IdeaAnalysis = require('../models/IdeaAnalysis.model');
 // @route   GET /api/dashboard/analyses
 exports.getAllAnalyses = async (req, res) => {
   try {
-    const { search, page = 1, limit = 10 } = req.query;
+    const { search, page = 1, limit = 10, verdict, sort = 'newest' } = req.query;
     const query = { userId: req.user._id };
 
-    if (search) {
-      query.title = { $regex: search, $options: 'i' };
-    }
+    if (search)  query.title   = { $regex: search, $options: 'i' };
+    if (verdict && verdict !== 'all') query.verdict = verdict;
 
-    const total = await IdeaAnalysis.countDocuments(query);
+    const sortMap = {
+      newest:     { createdAt: -1 },
+      oldest:     { createdAt:  1 },
+      'score-high': { overallScore: -1 },
+      'score-low':  { overallScore:  1 },
+    };
+    const sortOrder = sortMap[sort] || sortMap.newest;
+
+    const total    = await IdeaAnalysis.countDocuments(query);
     const analyses = await IdeaAnalysis.find(query)
-      .sort({ createdAt: -1 })
+      .sort(sortOrder)
       .skip((page - 1) * limit)
       .limit(Number(limit))
-      .select('title competitionScore demandScore originalityScore viralScore overallScore verdict createdAt');
+      .select('title competitionScore demandScore originalityScore viralScore overallScore verdict shareToken createdAt');
 
     res.json({
       success: true,

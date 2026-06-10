@@ -8,10 +8,10 @@ import api from '../services/api';
 import {
   ArrowLeft, Youtube, TrendingUp, Brain, Lightbulb, CheckCircle,
   ExternalLink, ThumbsUp, Eye, Calendar, Zap, BarChart2, Target,
-  Copy, Check
+  Copy, Check, Download, Share2, Link2, X
 } from 'lucide-react';
 
-// ─── Animated Score Ring (Overall Score in banner) ─────────────────────────
+// ─── Animated Score Ring ─────────────────────────────────────────────────────
 
 const AnimatedScoreRing = ({ score, verdict }) => {
   const [display, setDisplay] = useState(0);
@@ -57,10 +57,7 @@ const AnimatedScoreRing = ({ score, verdict }) => {
           cx={size/2} cy={size/2} r={r} fill="none"
           stroke={c.stroke} strokeWidth={sw} strokeLinecap="round"
           strokeDasharray={circ} strokeDashoffset={offset}
-          style={{
-            transition: 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)',
-            filter: `drop-shadow(0 0 8px ${c.glow})`
-          }}
+          style={{ transition: 'stroke-dashoffset 1.4s cubic-bezier(0.4,0,0.2,1)', filter: `drop-shadow(0 0 8px ${c.glow})` }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -75,48 +72,16 @@ const AnimatedScoreRing = ({ score, verdict }) => {
 
 const VerdictBanner = ({ verdict, overallScore }) => {
   const configs = {
-    Excellent: {
-      grad: 'from-emerald-950 via-teal-900/40 to-gray-950',
-      animated: 'from-emerald-500/10 via-teal-500/5 to-transparent',
-      border: 'border-emerald-500/30',
-      text: 'text-emerald-400',
-      emoji: '🚀',
-      msg: 'Outstanding potential. High demand, meaningful gap in the market. Build this now — you have first-mover advantage.'
-    },
-    Good: {
-      grad: 'from-blue-950 via-blue-900/30 to-gray-950',
-      animated: 'from-blue-500/10 via-indigo-500/5 to-transparent',
-      border: 'border-blue-500/30',
-      text: 'text-blue-400',
-      emoji: '✅',
-      msg: 'Solid idea with real audience pull. Needs a sharp, differentiated angle to cut through existing content.'
-    },
-    Average: {
-      grad: 'from-yellow-950 via-orange-900/20 to-gray-950',
-      animated: 'from-yellow-500/10 via-orange-500/5 to-transparent',
-      border: 'border-yellow-500/20',
-      text: 'text-yellow-400',
-      emoji: '⚡',
-      msg: 'Decent premise, but the niche is competitive or demand is unclear. A specific sub-angle could unlock this.'
-    },
-    Poor: {
-      grad: 'from-red-950 via-red-900/20 to-gray-950',
-      animated: 'from-red-500/10 via-rose-500/5 to-transparent',
-      border: 'border-red-500/20',
-      text: 'text-red-400',
-      emoji: '⚠️',
-      msg: 'High competition or weak demand signals. Pivot the angle, target a narrower audience, or choose a different topic.'
-    },
+    Excellent: { grad: 'from-emerald-950 via-teal-900/40 to-gray-950', animated: 'from-emerald-500/10 via-teal-500/5 to-transparent', border: 'border-emerald-500/30', text: 'text-emerald-400', emoji: '🚀', msg: 'Outstanding potential. High demand, meaningful gap in the market. Build this now — you have first-mover advantage.' },
+    Good:      { grad: 'from-blue-950 via-blue-900/30 to-gray-950',    animated: 'from-blue-500/10 via-indigo-500/5 to-transparent',   border: 'border-blue-500/30',    text: 'text-blue-400',    emoji: '✅', msg: 'Solid idea with real audience pull. Needs a sharp, differentiated angle to cut through existing content.' },
+    Average:   { grad: 'from-yellow-950 via-orange-900/20 to-gray-950',animated: 'from-yellow-500/10 via-orange-500/5 to-transparent',  border: 'border-yellow-500/20',  text: 'text-yellow-400',  emoji: '⚡', msg: 'Decent premise, but the niche is competitive or demand is unclear. A specific sub-angle could unlock this.' },
+    Poor:      { grad: 'from-red-950 via-red-900/20 to-gray-950',      animated: 'from-red-500/10 via-rose-500/5 to-transparent',       border: 'border-red-500/20',     text: 'text-red-400',     emoji: '⚠️', msg: 'High competition or weak demand signals. Pivot the angle, target a narrower audience, or choose a different topic.' },
   };
   const c = configs[verdict] || configs.Average;
 
   return (
     <div className={`bg-gradient-to-r ${c.grad} border ${c.border} rounded-2xl p-6 mb-8 relative overflow-hidden`}>
-      {/* Animated gradient shimmer overlay */}
-      <div
-        className={`absolute inset-0 pointer-events-none bg-gradient-to-r ${c.animated} animated-gradient opacity-60`}
-        style={{ backgroundSize: '200% 200%' }}
-      />
+      <div className={`absolute inset-0 pointer-events-none bg-gradient-to-r ${c.animated} animated-gradient opacity-60`} style={{ backgroundSize: '200% 200%' }} />
       <div className="flex items-center justify-between flex-wrap gap-6 relative">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
@@ -131,7 +96,7 @@ const VerdictBanner = ({ verdict, overallScore }) => {
   );
 };
 
-// ─── Score Breakdown Card ─────────────────────────────────────────────────────
+// ─── Score Breakdown Section ─────────────────────────────────────────────────
 
 const BreakdownSection = ({ title, items, color }) => (
   <div className={`card border-l-4 ${color} fade-in-up`}>
@@ -147,33 +112,23 @@ const BreakdownSection = ({ title, items, color }) => (
   </div>
 );
 
-// ─── Copyable Angle Card ──────────────────────────────────────────────────────
+// ─── Angle Card ───────────────────────────────────────────────────────────────
 
 const AngleCard = ({ angle, index }) => {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(angle);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
-
   return (
-    <div
-      className={`card hover:border-violet-500/50 hover:scale-[1.01] transition-all duration-200 group cursor-pointer fade-in-up delay-${Math.min(index + 1, 5)}`}
-      onClick={handleCopy}
-    >
+    <div className={`card hover:border-violet-500/50 hover:scale-[1.01] transition-all duration-200 group cursor-pointer fade-in-up delay-${Math.min(index + 1, 5)}`} onClick={handleCopy}>
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 bg-violet-500/20 text-violet-400 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm group-hover:bg-violet-500/30 transition-colors">
-          {index + 1}
-        </div>
+        <div className="w-8 h-8 bg-violet-500/20 text-violet-400 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-sm group-hover:bg-violet-500/30 transition-colors">{index + 1}</div>
         <div className="flex-1 min-w-0">
           <p className="text-white font-medium text-sm">{angle}</p>
           <div className="flex items-center gap-1 mt-2 text-gray-600 text-xs group-hover:text-violet-500 transition-colors">
-            {copied
-              ? <><Check size={11} className="text-emerald-400" /> <span className="text-emerald-400">Copied!</span></>
-              : <><Copy size={11} /> Click to copy</>
-            }
+            {copied ? <><Check size={11} className="text-emerald-400" /><span className="text-emerald-400">Copied!</span></> : <><Copy size={11} /> Click to copy</>}
           </div>
         </div>
       </div>
@@ -188,13 +143,150 @@ const formatNumber = (n) => {
   return n.toString();
 };
 
+// ─── Export Toolbar ───────────────────────────────────────────────────────────
+
+const ExportToolbar = ({ reportId, reportTitle, shareToken: initialShareToken }) => {
+  const [downloading, setDownloading] = useState(false);
+  const [sharing, setSharing]         = useState(false);
+  const [shareToken, setShareToken]   = useState(initialShareToken || null);
+  const [copiedLink, setCopiedLink]   = useState(false);
+  const [showSharePanel, setShowSharePanel] = useState(false);
+  const [revoking, setRevoking]       = useState(false);
+
+  const handleDownloadPDF = async () => {
+    setDownloading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/export/${reportId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('PDF generation failed');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportTitle.replace(/[^a-z0-9]/gi, '_').slice(0, 60)}_report.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Failed to download PDF. Please try again.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleGenerateShare = async () => {
+    setSharing(true);
+    try {
+      const { data } = await api.post(`/export/${reportId}/share`);
+      setShareToken(data.shareToken);
+      setShowSharePanel(true);
+    } catch (err) {
+      alert('Failed to generate share link.');
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleCopyLink = () => {
+    const link = `${window.location.origin}/shared/${shareToken}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
+  const handleRevoke = async () => {
+    if (!window.confirm('Revoke this share link? Anyone with the link will lose access.')) return;
+    setRevoking(true);
+    try {
+      await api.delete(`/export/${reportId}/share`);
+      setShareToken(null);
+      setShowSharePanel(false);
+    } catch (err) {
+      alert('Failed to revoke link.');
+    } finally {
+      setRevoking(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      {/* Toolbar buttons */}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* PDF Download */}
+        <button
+          onClick={handleDownloadPDF}
+          disabled={downloading}
+          className="btn-secondary flex items-center gap-2 text-sm py-2 px-4 disabled:opacity-60"
+          title="Download PDF report"
+        >
+          {downloading
+            ? <><div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> Generating…</>
+            : <><Download size={15} /> PDF</>}
+        </button>
+
+        {/* Share link */}
+        {shareToken ? (
+          <button
+            onClick={() => setShowSharePanel(p => !p)}
+            className="btn-secondary flex items-center gap-2 text-sm py-2 px-4 border-emerald-500/40 text-emerald-400 hover:border-emerald-400"
+            title="Share link active"
+          >
+            <Link2 size={15} /> Shared
+          </button>
+        ) : (
+          <button
+            onClick={handleGenerateShare}
+            disabled={sharing}
+            className="btn-secondary flex items-center gap-2 text-sm py-2 px-4 disabled:opacity-60"
+            title="Generate shareable link"
+          >
+            {sharing
+              ? <><div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> Sharing…</>
+              : <><Share2 size={15} /> Share</>}
+          </button>
+        )}
+      </div>
+
+      {/* Share panel dropdown */}
+      {showSharePanel && shareToken && (
+        <div className="absolute top-12 right-0 z-50 w-80 card border-gray-700 shadow-2xl shadow-black/60 fade-in-up">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-white font-semibold text-sm flex items-center gap-2"><Share2 size={14} className="text-violet-400" /> Share Report</span>
+            <button onClick={() => setShowSharePanel(false)} className="text-gray-500 hover:text-white"><X size={15} /></button>
+          </div>
+          <p className="text-gray-400 text-xs mb-3">Anyone with this link can view a read-only version of this report — no login required.</p>
+          <div className="flex items-center gap-2 bg-gray-900 rounded-lg p-2 border border-gray-700 mb-3">
+            <span className="text-gray-400 text-xs truncate flex-1">{window.location.origin}/shared/{shareToken}</span>
+            <button
+              onClick={handleCopyLink}
+              className="flex-shrink-0 text-xs bg-violet-600 hover:bg-violet-500 text-white px-2 py-1 rounded-md flex items-center gap-1 transition-colors"
+            >
+              {copiedLink ? <><Check size={11} /> Copied!</> : <><Copy size={11} /> Copy</>}
+            </button>
+          </div>
+          <button
+            onClick={handleRevoke}
+            disabled={revoking}
+            className="text-red-400 hover:text-red-300 text-xs flex items-center gap-1 disabled:opacity-40"
+          >
+            <X size={11} /> {revoking ? 'Revoking…' : 'Revoke link'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 const ReportPage = () => {
   const { id } = useParams();
-  const [report, setReport] = useState(null);
+  const [report, setReport]   = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
   const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
@@ -215,7 +307,6 @@ const ReportPage = () => {
     <div className="min-h-screen bg-gray-950">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Skeleton loader */}
         <div className="h-6 w-40 skeleton mb-6" />
         <div className="h-10 w-2/3 skeleton mb-2" />
         <div className="h-4 w-40 skeleton mb-8" />
@@ -254,28 +345,33 @@ const ReportPage = () => {
   ];
 
   const breakdown = report.breakdown || {};
-
-  // Fix: breakdown bars use 100 as max, not overallScore
   const weightRows = breakdown.weightExplanation || [
     `Demand ×0.35 → contributes ${Math.round(report.demandScore * 0.35)} pts`,
     `Originality ×0.30 → contributes ${Math.round(report.originalityScore * 0.30)} pts`,
     `Viral Potential ×0.25 → contributes ${Math.round(report.viralScore * 0.25)} pts`,
     `Low Competition ×0.10 → contributes ${Math.round((100 - report.competitionScore) * 0.10)} pts`,
   ];
-  const maxPts = 100; // correct denominator
+  const maxPts = 100;
 
   return (
     <div className="min-h-screen bg-gray-950">
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 mb-6 fade-in-up">
-          <Link to="/dashboard" className="text-gray-500 hover:text-violet-400 flex items-center gap-1 text-sm transition-colors">
-            <ArrowLeft size={14} /> Dashboard
-          </Link>
-          <span className="text-gray-700">/</span>
-          <span className="text-gray-400 text-sm truncate max-w-xs">{report.title}</span>
+        {/* Breadcrumb + Export Toolbar */}
+        <div className="flex items-center justify-between gap-4 mb-6 fade-in-up flex-wrap">
+          <div className="flex items-center gap-2">
+            <Link to="/dashboard" className="text-gray-500 hover:text-violet-400 flex items-center gap-1 text-sm transition-colors">
+              <ArrowLeft size={14} /> Dashboard
+            </Link>
+            <span className="text-gray-700">/</span>
+            <span className="text-gray-400 text-sm truncate max-w-xs">{report.title}</span>
+          </div>
+          <ExportToolbar
+            reportId={report._id}
+            reportTitle={report.title}
+            shareToken={report.shareToken}
+          />
         </div>
 
         {/* Title */}
@@ -283,6 +379,16 @@ const ReportPage = () => {
           <h1 className="text-3xl font-bold text-white mb-2">"{report.title}"</h1>
           <p className="text-gray-500 text-sm">
             Analyzed on {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            {report.confidenceScore > 0 && (
+              <span className="ml-3 text-xs bg-gray-800 border border-gray-700 rounded-full px-2 py-0.5">
+                Confidence: <span className={report.confidenceScore >= 70 ? 'text-emerald-400' : report.confidenceScore >= 40 ? 'text-yellow-400' : 'text-red-400'}>{report.confidenceScore}/100</span>
+              </span>
+            )}
+            {report.executionDifficulty > 0 && (
+              <span className="ml-2 text-xs bg-gray-800 border border-gray-700 rounded-full px-2 py-0.5">
+                Execution difficulty: <span className={report.executionDifficulty >= 70 ? 'text-red-400' : report.executionDifficulty >= 40 ? 'text-yellow-400' : 'text-emerald-400'}>{report.executionDifficulty}/100</span>
+              </span>
+            )}
           </p>
         </div>
 
@@ -303,6 +409,17 @@ const ReportPage = () => {
             </div>
           ))}
         </div>
+
+        {/* Keywords chips */}
+        {report.keywords?.length > 0 && (
+          <div className="mb-6 flex flex-wrap gap-2 fade-in-up">
+            {report.keywords.slice(0, 12).map((kw, i) => (
+              <span key={i} className="text-xs bg-violet-500/10 border border-violet-500/25 text-violet-300 px-2.5 py-1 rounded-full">
+                {kw}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="flex overflow-x-auto gap-1 mb-6 bg-gray-900 border border-gray-800 rounded-xl p-1 fade-in-up delay-5">
@@ -326,36 +443,95 @@ const ReportPage = () => {
 
           {/* OVERVIEW */}
           {activeTab === 'overview' && (
-            <div className="grid lg:grid-cols-2 gap-6">
-              <ScoreRadarChart scores={report} />
-              <div className="card fade-in-up">
-                <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                  <CheckCircle size={18} className="text-emerald-400" /> AI Recommendations
-                </h3>
-                {report.recommendations?.length > 0 ? (
-                  <ul className="space-y-3">
-                    {report.recommendations.map((rec, i) => (
-                      <li key={i} className="flex items-start gap-3 text-gray-300 text-sm">
-                        <span className="w-6 h-6 bg-violet-500/20 text-violet-400 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">
-                          {i + 1}
-                        </span>
-                        {rec}
-                      </li>
-                    ))}
-                  </ul>
-                ) : <p className="text-gray-500 text-sm">No recommendations available.</p>}
+            <div className="space-y-6">
+              <div className="grid lg:grid-cols-2 gap-6">
+                <ScoreRadarChart scores={report} />
+                <div className="card fade-in-up">
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <CheckCircle size={18} className="text-emerald-400" /> AI Recommendations
+                  </h3>
+                  {report.recommendations?.length > 0 ? (
+                    <ul className="space-y-3">
+                      {report.recommendations.map((rec, i) => (
+                        <li key={i} className="flex items-start gap-3 text-gray-300 text-sm">
+                          <span className="w-6 h-6 bg-violet-500/20 text-violet-400 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold mt-0.5">{i + 1}</span>
+                          {rec}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="text-gray-500 text-sm">No recommendations available.</p>}
+                </div>
               </div>
+
+              {/* Competitors mini panel */}
+              {report.competitors?.length > 0 && (
+                <div className="card fade-in-up">
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">⚔️ Top Competitors</h3>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {report.competitors.slice(0, 6).map((c, i) => (
+                      <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+                        <p className="text-white text-sm font-medium truncate">{c.name}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {c.views && <span className="text-gray-500 text-xs flex items-center gap-1"><Eye size={10} /> {formatNumber(c.views)}</span>}
+                          {c.dominance && (
+                            <span className={`text-xs px-1.5 py-0.5 rounded-full border ${
+                              c.dominance === 'dominant' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                              c.dominance === 'moderate' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
+                              'bg-gray-700 text-gray-400 border-gray-600'}`}>
+                              {c.dominance}
+                            </span>
+                          )}
+                        </div>
+                        {c.url && <a href={c.url} target="_blank" rel="noopener noreferrer" className="text-violet-400 text-xs hover:text-violet-300 flex items-center gap-1 mt-1"><ExternalLink size={10} /> View</a>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Market gaps */}
+              {report.marketGaps?.length > 0 && (
+                <div className="card fade-in-up border-l-4 border-emerald-500/40">
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><Target size={16} className="text-emerald-400" /> Market Gaps Detected</h3>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {report.marketGaps.map((gap, i) => (
+                      <div key={i} className="flex items-start gap-2 bg-emerald-950/30 border border-emerald-500/15 rounded-lg p-3">
+                        <span className="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full flex-shrink-0">{gap.type || 'gap'}</span>
+                        <p className="text-gray-300 text-sm">{gap.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Trend snapshot */}
+              {report.trendData && (
+                <div className="card fade-in-up">
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><TrendingUp size={16} className="text-green-400" /> Trend Snapshot</h3>
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
+                    {[
+                      { label: 'Reddit signals', val: report.trendData.redditSignals },
+                      { label: 'Total upvotes',  val: formatNumber(report.trendData.totalUpvotes) },
+                      { label: 'YT videos',      val: report.trendData.youtubeVideos },
+                      { label: 'Avg views',      val: formatNumber(report.trendData.avgViews) },
+                      { label: 'Recent uploads', val: report.trendData.recentUploads },
+                      { label: 'Like ratio',     val: (report.trendData.avgLikeViewRatio || 0).toFixed(3) },
+                    ].map(({ label, val }) => (
+                      <div key={label} className="bg-gray-900 border border-gray-800 rounded-xl p-3">
+                        <p className="text-white font-bold text-lg">{val}</p>
+                        <p className="text-gray-500 text-xs mt-0.5">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* ─── NEXT STEPS (new) ─── */}
+          {/* NEXT STEPS */}
           {activeTab === 'next-steps' && (
             <div className="max-w-2xl">
-              <NextStepsPanel
-                recommendations={report.recommendations}
-                verdict={report.verdict}
-                betterAngles={report.betterAngles}
-              />
+              <NextStepsPanel recommendations={report.recommendations} verdict={report.verdict} betterAngles={report.betterAngles} />
             </div>
           )}
 
@@ -368,12 +544,9 @@ const ReportPage = () => {
               </div>
               {report.youtubeResults?.length > 0 ? report.youtubeResults.map((video, i) => (
                 <div key={i} className={`card hover:border-gray-700 transition-all flex items-start gap-4 group fade-in-up delay-${Math.min(i + 1, 5)}`}>
-                  {video.thumbnail && (
-                    <img src={video.thumbnail} alt="" className="w-24 h-16 object-cover rounded-lg flex-shrink-0" />
-                  )}
+                  {video.thumbnail && <img src={video.thumbnail} alt="" className="w-24 h-16 object-cover rounded-lg flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
-                    <a href={video.url} target="_blank" rel="noopener noreferrer"
-                      className="text-white font-medium hover:text-violet-400 transition-colors line-clamp-2 flex items-start gap-1">
+                    <a href={video.url} target="_blank" rel="noopener noreferrer" className="text-white font-medium hover:text-violet-400 transition-colors line-clamp-2 flex items-start gap-1">
                       {video.title} <ExternalLink size={12} className="flex-shrink-0 mt-1" />
                     </a>
                     <p className="text-gray-500 text-sm mt-1">{video.channelName}</p>
@@ -393,35 +566,28 @@ const ReportPage = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-4">
                 <TrendingUp size={20} className="text-green-400" />
-                <h3 className="text-white font-semibold">Demand Signals — Google Trends & Wikipedia</h3>
+                <h3 className="text-white font-semibold">Demand Signals</h3>
               </div>
               {report.redditResults?.length > 0 ? report.redditResults.map((post, i) => (
                 <div key={i} className={`card hover:border-gray-700 transition-all fade-in-up delay-${Math.min(i + 1, 5)}`}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <a href={post.url} target="_blank" rel="noopener noreferrer"
-                        className="text-white font-medium hover:text-violet-400 transition-colors flex items-start gap-1">
+                      <a href={post.url} target="_blank" rel="noopener noreferrer" className="text-white font-medium hover:text-violet-400 transition-colors flex items-start gap-1">
                         {post.title} <ExternalLink size={12} className="flex-shrink-0 mt-1" />
                       </a>
                       <p className="text-green-400 text-xs mt-1">{post.source || post.subreddit}</p>
                     </div>
                   </div>
                   <div className="flex gap-6 mt-3">
-                    <span className="flex items-center gap-1 text-gray-400 text-xs">
-                      <TrendingUp size={12} /> Interest score: {formatNumber(Math.round(post.upvotes))}
-                    </span>
-                    <span className="flex items-center gap-1 text-gray-400 text-xs">
-                      <Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString()}
-                    </span>
+                    <span className="flex items-center gap-1 text-gray-400 text-xs"><TrendingUp size={12} /> {formatNumber(Math.round(post.upvotes))}</span>
+                    <span className="flex items-center gap-1 text-gray-400 text-xs"><Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-gray-500 mb-1">
-                      <span>Relevance</span>
-                      <span>{Math.round((post.upvoteRatio || 0) * 100)}%</span>
+                      <span>Relevance</span><span>{Math.round((post.upvoteRatio || 0) * 100)}%</span>
                     </div>
                     <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-1.5 bg-green-400 rounded-full bar-fill"
-                        style={{ width: `${(post.upvoteRatio || 0) * 100}%` }} />
+                      <div className="h-1.5 bg-green-400 rounded-full bar-fill" style={{ width: `${(post.upvoteRatio || 0) * 100}%` }} />
                     </div>
                   </div>
                 </div>
@@ -444,11 +610,11 @@ const ReportPage = () => {
               {report.aiReport && Object.keys(report.aiReport).some(k => report.aiReport[k]) ? (
                 <>
                   {[
-                    { key: 'competitionAnalysis',      title: '⚔️ Competition Analysis',   color: 'border-orange-500/40', delay: 'delay-1' },
-                    { key: 'audienceInterestAnalysis', title: '👥 Audience Interest',        color: 'border-blue-500/40',   delay: 'delay-2' },
-                    { key: 'originalityAssessment',    title: '💡 Originality & Gap',        color: 'border-yellow-500/40', delay: 'delay-3' },
-                    { key: 'viralPotential',           title: '🚀 Viral Potential',          color: 'border-emerald-500/40',delay: 'delay-4' },
-                    { key: 'suggestedImprovements',    title: '📈 Suggested Improvements',  color: 'border-violet-500/40', delay: 'delay-5' },
+                    { key: 'competitionAnalysis',      title: '⚔️ Competition Analysis',   color: 'border-orange-500/40',  delay: 'delay-1' },
+                    { key: 'audienceInterestAnalysis', title: '👥 Audience Interest',        color: 'border-blue-500/40',    delay: 'delay-2' },
+                    { key: 'originalityAssessment',    title: '💡 Originality & Gap',        color: 'border-yellow-500/40',  delay: 'delay-3' },
+                    { key: 'viralPotential',           title: '🚀 Viral Potential',          color: 'border-emerald-500/40', delay: 'delay-4' },
+                    { key: 'suggestedImprovements',    title: '📈 Suggested Improvements',  color: 'border-violet-500/40',  delay: 'delay-5' },
                   ].map(section => report.aiReport[section.key] && (
                     <div key={section.key} className={`card border-l-4 ${section.color} hover:border-l-[5px] transition-all duration-200 fade-in-up ${section.delay}`}>
                       <h4 className="text-white font-semibold mb-3">{section.title}</h4>
@@ -472,12 +638,8 @@ const ReportPage = () => {
                 <BarChart2 size={20} className="text-blue-400" />
                 <h3 className="text-white font-semibold">Why These Scores? Full Breakdown</h3>
               </div>
-
-              {/* Weight contribution bars — fixed to use 100 as max */}
               <div className="card fade-in-up">
-                <h4 className="text-white font-semibold mb-5 flex items-center gap-2">
-                  ⚖️ Score Weight Breakdown
-                </h4>
+                <h4 className="text-white font-semibold mb-5 flex items-center gap-2">⚖️ Score Weight Breakdown</h4>
                 {weightRows.map((item, i) => {
                   const pts = parseInt(item.match(/(\d+) pts/)?.[1] || 0);
                   const barColors = ['bg-blue-500', 'bg-yellow-500', 'bg-emerald-500', 'bg-violet-500'];
@@ -489,10 +651,7 @@ const ReportPage = () => {
                         <span className="text-white font-bold">{pts} pts</span>
                       </div>
                       <div className="h-2.5 bg-gray-800 rounded-full overflow-hidden">
-                        <div
-                          className={`h-2.5 rounded-full ${barColors[i]} bar-fill`}
-                          style={{ width: `${pct}%` }}
-                        />
+                        <div className={`h-2.5 rounded-full ${barColors[i]} bar-fill`} style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
@@ -502,30 +661,15 @@ const ReportPage = () => {
                   <span className="text-violet-400 font-bold text-xl">{report.overallScore} / 100</span>
                 </div>
               </div>
-
-              <BreakdownSection
-                title="⚔️ Competition Factors"
-                items={breakdown.competitionFactors || [`${report.youtubeResults?.length || 0} competing videos found`]}
-                color="border-orange-500/40"
-              />
-
-              <BreakdownSection
-                title="🔥 Demand Factors"
-                items={breakdown.demandFactors || [`${report.redditResults?.length || 0} demand signals collected`]}
-                color="border-blue-500/40"
-              />
-
+              <BreakdownSection title="⚔️ Competition Factors" items={breakdown.competitionFactors || [`${report.youtubeResults?.length || 0} competing videos found`]} color="border-orange-500/40" />
+              <BreakdownSection title="🔥 Demand Factors"      items={breakdown.demandFactors      || [`${report.redditResults?.length || 0} demand signals collected`]} color="border-blue-500/40" />
               <div className="card border-l-4 border-emerald-500/40 bg-gradient-to-r from-emerald-950/30 to-transparent fade-in-up">
-                <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                  <Target size={16} className="text-emerald-400" /> 🎯 Market Gaps Detected
-                </h4>
+                <h4 className="text-white font-semibold mb-3 flex items-center gap-2"><Target size={16} className="text-emerald-400" /> 🎯 Market Gaps Detected</h4>
                 <p className="text-gray-500 text-xs mb-3">Real opportunities identified from the data:</p>
                 <ul className="space-y-3">
                   {(breakdown.marketGaps || report.scoreBreakdown?.marketGaps || ['No gap data — rerun the analysis']).map((gap, i) => (
                     <li key={i} className="flex items-start gap-3 text-gray-300 text-sm">
-                      <span className="w-5 h-5 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5">
-                        {i + 1}
-                      </span>
+                      <span className="w-5 h-5 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold mt-0.5">{i + 1}</span>
                       {gap}
                     </li>
                   ))}
@@ -534,7 +678,7 @@ const ReportPage = () => {
             </div>
           )}
 
-          {/* ─── WINNING ANGLES (enhanced) ─── */}
+          {/* WINNING ANGLES */}
           {activeTab === 'angles' && (
             <div>
               <div className="flex items-center justify-between gap-2 mb-6">
@@ -542,24 +686,17 @@ const ReportPage = () => {
                   <Lightbulb size={20} className="text-yellow-400" />
                   <h3 className="text-white font-semibold">Winning Angles</h3>
                   {report.betterAngles?.length > 0 && (
-                    <span className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-bold px-2 py-0.5 rounded-full">
-                      {report.betterAngles.length} ideas
-                    </span>
+                    <span className="bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 text-xs font-bold px-2 py-0.5 rounded-full">{report.betterAngles.length} ideas</span>
                   )}
                 </div>
                 {report.betterAngles?.length > 0 && (
-                  <button
-                    onClick={() => navigator.clipboard.writeText(report.betterAngles.join('\n'))}
-                    className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5"
-                  >
+                  <button onClick={() => navigator.clipboard.writeText(report.betterAngles.join('\n'))} className="btn-secondary py-1.5 px-3 text-xs flex items-center gap-1.5">
                     <Copy size={12} /> Copy All
                   </button>
                 )}
               </div>
-
               {report.betterAngles?.length > 0 ? (
                 <>
-                  {/* Highlight card for best angle */}
                   <div className="card mb-4 bg-gradient-to-r from-violet-900/40 to-indigo-900/30 border-violet-500/30 fade-in-up">
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">🏆</span>
@@ -569,11 +706,8 @@ const ReportPage = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="grid sm:grid-cols-2 gap-4">
-                    {report.betterAngles.map((angle, i) => (
-                      <AngleCard key={i} angle={angle} index={i} />
-                    ))}
+                    {report.betterAngles.map((angle, i) => <AngleCard key={i} angle={angle} index={i} />)}
                   </div>
                 </>
               ) : (
@@ -582,12 +716,9 @@ const ReportPage = () => {
                   <p className="text-gray-400">No angle suggestions generated.</p>
                 </div>
               )}
-
               <div className="card mt-6 text-center bg-gradient-to-r from-violet-900/30 to-indigo-900/30 border-violet-500/20">
                 <p className="text-gray-300 mb-4">Want to validate one of these improved angles?</p>
-                <Link to="/analyzer" className="btn-primary inline-flex items-center gap-2">
-                  <Zap size={16} /> Analyze a New Idea
-                </Link>
+                <Link to="/analyzer" className="btn-primary inline-flex items-center gap-2"><Zap size={16} /> Analyze a New Idea</Link>
               </div>
             </div>
           )}

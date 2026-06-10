@@ -9,10 +9,10 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/auth.routes');
 const analysisRoutes = require('./routes/analysis.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+const exportRoutes = require('./routes/export.routes');
 
 const app = express();
 
-// Trust Render's proxy (fixes ERR_ERL_UNEXPECTED_X_FORWARDED_FOR)
 app.set('trust proxy', 1);
 
 connectDB();
@@ -26,7 +26,7 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-const generalLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
+const generalLimiter  = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
 const analysisLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -36,9 +36,10 @@ const analysisLimiter = rateLimit({
 app.use('/api/', generalLimiter);
 app.use('/api/analysis/analyze', analysisLimiter);
 
-app.use('/api/auth', authRoutes);
-app.use('/api/analysis', analysisRoutes);
+app.use('/api/auth',      authRoutes);
+app.use('/api/analysis',  analysisRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/export',    exportRoutes);   // covers /:id/pdf, /:id/share, /shared/:token
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Content Idea Validator API is running', port: process.env.PORT });
