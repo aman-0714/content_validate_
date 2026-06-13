@@ -3,16 +3,19 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
-import { LayoutDashboard, Trash2, Search, BarChart3, TrendingUp, Zap, ExternalLink } from 'lucide-react';
+import {
+  LayoutDashboard, Trash2, Search, BarChart3,
+  Zap, ExternalLink, Plus, TrendingUp, Star, Activity
+} from 'lucide-react';
 
-// ─── Animated stat card with count-up ────────────────────────────────────────
-const StatCard = ({ value, label, color, delay }) => {
+// ─── Animated count-up stat card ─────────────────────────────────────────────
+const StatCard = ({ value, label, icon: Icon, accent, delay }) => {
   const [display, setDisplay] = useState(0);
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.4 });
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true); }, { threshold: 0.3 });
     if (ref.current) obs.observe(ref.current);
     return () => obs.disconnect();
   }, []);
@@ -22,7 +25,7 @@ const StatCard = ({ value, label, color, delay }) => {
     const target = typeof value === 'number' ? value : parseFloat(value) || 0;
     let current = 0;
     const step = 16;
-    const inc = target / (800 / step);
+    const inc = target / (700 / step);
     const t = setInterval(() => {
       current += inc;
       if (current >= target) { setDisplay(target); clearInterval(t); }
@@ -34,49 +37,86 @@ const StatCard = ({ value, label, color, delay }) => {
   return (
     <div
       ref={ref}
-      className={`card text-center hover:border-gray-700 hover:scale-[1.02] transition-all duration-300 fade-in-up ${delay}`}
+      className={`fade-in-up ${delay}`}
+      style={{
+        background: '#111827',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: '14px',
+        padding: '1.25rem 1.5rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = `${accent}33`;
+        e.currentTarget.style.boxShadow = `0 0 20px ${accent}14`;
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
+        e.currentTarget.style.boxShadow = 'none';
+      }}
     >
-      <p className={`text-3xl font-bold ${color} stat-pop`} style={{ animationDelay: delay ? `${parseInt(delay.replace('delay-', '')) * 50}ms` : '0ms' }}>
-        {display}
-      </p>
-      <p className="text-gray-400 text-sm mt-1">{label}</p>
+      <div
+        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+        style={{ background: `${accent}18`, border: `1px solid ${accent}22` }}
+      >
+        <Icon size={18} style={{ color: accent }} />
+      </div>
+      <div>
+        <p className="text-2xl font-bold text-white leading-none stat-pop" style={{ animationDelay: delay ? `${parseInt(delay.replace('delay-','')) * 60}ms` : '0' }}>
+          {display}
+        </p>
+        <p className="text-slate-500 text-xs mt-0.5 font-medium">{label}</p>
+      </div>
     </div>
   );
 };
 
 // ─── Verdict badge ────────────────────────────────────────────────────────────
 const VerdictBadge = ({ verdict }) => {
-  const colors = {
-    Excellent: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    Good:      'bg-blue-500/20 text-blue-400 border-blue-500/30',
-    Average:   'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-    Poor:      'bg-red-500/20 text-red-400 border-red-500/30',
+  const styles = {
+    Excellent: { background: 'rgba(16,185,129,0.12)', color: '#10B981', border: '1px solid rgba(16,185,129,0.25)' },
+    Good:      { background: 'rgba(59,130,246,0.12)',  color: '#60A5FA', border: '1px solid rgba(59,130,246,0.25)' },
+    Average:   { background: 'rgba(245,158,11,0.12)', color: '#FBBF24', border: '1px solid rgba(245,158,11,0.25)' },
+    Poor:      { background: 'rgba(239,68,68,0.12)',  color: '#F87171', border: '1px solid rgba(239,68,68,0.25)' },
   };
+  const s = styles[verdict] || styles.Average;
   return (
-    <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${colors[verdict] || colors.Average}`}>
+    <span style={{ ...s, fontSize: '0.7rem', fontWeight: 700, padding: '3px 10px', borderRadius: '99px', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
       {verdict}
     </span>
   );
 };
 
-// ─── Mini score bar ───────────────────────────────────────────────────────────
-const MiniScoreBar = ({ score, color }) => (
-  <div className="flex items-center gap-2">
-    <span className={`font-semibold text-sm ${color}`}>{score}</span>
-    <div className="w-10 h-1.5 bg-gray-800 rounded-full overflow-hidden hidden lg:block">
-      <div className={`h-1.5 rounded-full bar-fill ${color.replace('text-', 'bg-')}`} style={{ width: `${score}%` }} />
+// ─── Mini score pill ──────────────────────────────────────────────────────────
+const ScorePill = ({ score, type }) => {
+  const color =
+    type === 'competition'
+      ? score > 70 ? '#F87171' : score > 40 ? '#FBBF24' : '#10B981'
+      : score > 70 ? '#10B981' : score > 40 ? '#60A5FA' : '#FBBF24';
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="font-semibold text-sm" style={{ color }}>{score}</span>
+      <div className="w-12 h-1 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+        <div
+          className="h-1 rounded-full bar-fill"
+          style={{ width: `${score}%`, background: color }}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 const DashboardPage = () => {
   const { user } = useAuth();
   const [analyses, setAnalyses] = useState([]);
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const [stats, setStats]       = useState(null);
+  const [loading, setLoading]   = useState(true);
+  const [search, setSearch]     = useState('');
+  const [page, setPage]         = useState(1);
   const [pagination, setPagination] = useState({});
   const [deleting, setDeleting] = useState(null);
 
@@ -87,7 +127,7 @@ const DashboardPage = () => {
     try {
       const [analysesRes, statsRes] = await Promise.all([
         api.get(`/dashboard/analyses?search=${search}&page=${page}&limit=8`),
-        api.get('/dashboard/stats')
+        api.get('/dashboard/stats'),
       ]);
       setAnalyses(analysesRes.data.data);
       setPagination(analysesRes.data.pagination);
@@ -106,132 +146,173 @@ const DashboardPage = () => {
       await api.delete(`/dashboard/analyses/${id}`);
       setAnalyses(prev => prev.filter(a => a._id !== id));
       setStats(prev => prev ? { ...prev, total: prev.total - 1 } : prev);
-    } catch (err) {
-      alert('Failed to delete analysis');
-    } finally {
-      setDeleting(null);
-    }
+    } catch { alert('Failed to delete analysis'); }
+    finally { setDeleting(null); }
   };
 
-  const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const formatDate = (d) =>
+    new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen" style={{ background: '#0B0F1A' }}>
       <Navbar />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 fade-in-up">
+        {/* ── Header ─────────────────────────────────────────────────────────── */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 fade-in">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <LayoutDashboard className="text-violet-400" /> Dashboard
-            </h1>
-            <p className="text-gray-400 mt-1">Welcome back, {user?.name} 👋</p>
+            <div className="flex items-center gap-2 mb-1">
+              <LayoutDashboard size={18} style={{ color: '#00D4FF' }} />
+              <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+            </div>
+            <p className="text-slate-500 text-sm">
+              Welcome back, <span className="text-slate-300 font-medium">{user?.name}</span> 👋
+            </p>
           </div>
-          <Link to="/analyzer" className="btn-primary flex items-center gap-2 glow">
-            <Zap size={18} /> New Analysis
+          <Link to="/analyzer" className="btn-primary glow">
+            <Plus size={15} /> New Analysis
           </Link>
         </div>
 
-        {/* Stat cards with count-up */}
+        {/* ── Stat cards ─────────────────────────────────────────────────────── */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <StatCard value={stats.total}                   label="Total Analyses"  color="text-violet-400"  delay="delay-1" />
-            <StatCard value={stats.avgOverall}              label="Avg. Score"      color="text-blue-400"    delay="delay-2" />
-            <StatCard value={stats.verdicts?.Excellent || 0} label="Excellent Ideas" color="text-emerald-400" delay="delay-3" />
-            <StatCard value={stats.verdicts?.Good || 0}     label="Good Ideas"      color="text-yellow-400"  delay="delay-4" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+            <StatCard value={stats.total}                    label="Total Analyses"  icon={BarChart3}   accent="#00D4FF" delay="delay-1" />
+            <StatCard value={stats.avgOverall}               label="Average Score"   icon={Activity}    accent="#818CF8" delay="delay-2" />
+            <StatCard value={stats.verdicts?.Excellent || 0} label="Excellent Ideas" icon={Star}        accent="#10B981" delay="delay-3" />
+            <StatCard value={stats.verdicts?.Good || 0}      label="Good Ideas"      icon={TrendingUp}  accent="#60A5FA" delay="delay-4" />
           </div>
         )}
 
-        {/* Search bar */}
-        <div className="relative mb-6 fade-in-up delay-5">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+        {/* ── Search ─────────────────────────────────────────────────────────── */}
+        <div className="relative mb-5 fade-in-up delay-5">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: '#4B5563' }} />
           <input
             type="text"
-            className="input-field pl-11"
-            placeholder="Search your analyses..."
+            className="input-field"
+            style={{ paddingLeft: '2.5rem' }}
+            placeholder="Search analyses…"
             value={search}
             onChange={e => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
 
-        {/* Table */}
+        {/* ── Table ──────────────────────────────────────────────────────────── */}
         {loading ? (
-          <div className="card p-0 overflow-hidden">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 px-6 py-4 border-b border-gray-800 last:border-0">
+          <div style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px', overflow: 'hidden' }}>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-6 py-4" style={{ borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                 <div className="flex-1 h-4 skeleton" />
-                <div className="w-10 h-4 skeleton" />
-                <div className="w-10 h-4 skeleton" />
-                <div className="w-16 h-6 skeleton rounded-full" />
+                <div className="w-12 h-4 skeleton" />
+                <div className="w-12 h-4 skeleton" />
+                <div className="w-16 h-5 skeleton rounded-full" />
               </div>
             ))}
           </div>
         ) : analyses.length === 0 ? (
-          <div className="card text-center py-20 fade-in-up">
-            <BarChart3 size={48} className="text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg font-semibold">No analyses yet</p>
-            <p className="text-gray-600 text-sm mt-1 mb-6">Validate your first content idea to get started</p>
-            <Link to="/analyzer" className="btn-primary inline-flex items-center gap-2">
-              <Zap size={16} /> Analyze an Idea
+          <div
+            className="text-center py-20 fade-in"
+            style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px' }}
+          >
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'rgba(0,212,255,0.08)', border: '1px solid rgba(0,212,255,0.15)' }}
+            >
+              <BarChart3 size={24} style={{ color: '#00D4FF' }} />
+            </div>
+            <p className="text-white font-semibold text-base mb-1">No analyses yet</p>
+            <p className="text-slate-500 text-sm mb-6">Validate your first content idea to get started</p>
+            <Link to="/analyzer" className="btn-primary inline-flex">
+              <Zap size={15} /> Analyze an Idea
             </Link>
           </div>
         ) : (
-          <div className="card overflow-hidden p-0 fade-in-up">
+          <div
+            className="overflow-hidden fade-in-up"
+            style={{ background: '#111827', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '14px' }}
+          >
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left text-gray-400 text-sm font-medium px-6 py-4">Idea</th>
-                    <th className="text-center text-gray-400 text-sm font-medium px-4 py-4 hidden md:table-cell">Competition</th>
-                    <th className="text-center text-gray-400 text-sm font-medium px-4 py-4 hidden md:table-cell">Demand</th>
-                    <th className="text-center text-gray-400 text-sm font-medium px-4 py-4">Overall</th>
-                    <th className="text-center text-gray-400 text-sm font-medium px-4 py-4">Verdict</th>
-                    <th className="text-center text-gray-400 text-sm font-medium px-4 py-4 hidden sm:table-cell">Date</th>
-                    <th className="text-center text-gray-400 text-sm font-medium px-4 py-4">Actions</th>
+                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    {['Idea','Competition','Demand','Overall','Verdict','Date','Actions'].map((h, i) => (
+                      <th
+                        key={h}
+                        className={`text-xs font-semibold uppercase tracking-widest px-5 py-3.5 ${
+                          i === 0 ? 'text-left' : 'text-center'
+                        } ${[1,2].includes(i) ? 'hidden md:table-cell' : ''} ${i === 5 ? 'hidden sm:table-cell' : ''}`}
+                        style={{ color: '#475569', letterSpacing: '0.07em' }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
                   {analyses.map((a, i) => (
                     <tr
                       key={a._id}
-                      className={`border-b border-gray-800/50 hover:bg-gray-800/30 transition-colors fade-in-up ${i === analyses.length - 1 ? 'border-0' : ''}`}
-                      style={{ animationDelay: `${i * 40}ms` }}
+                      className="fade-in-up"
+                      style={{
+                        borderBottom: i < analyses.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                        animationDelay: `${i * 35}ms`,
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.025)'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                     >
-                      <td className="px-6 py-4">
-                        <p className="text-white font-medium text-sm line-clamp-1 max-w-xs">{a.title}</p>
+                      {/* Idea title */}
+                      <td className="px-5 py-3.5">
+                        <p className="text-slate-200 font-medium text-sm line-clamp-1 max-w-xs">{a.title}</p>
                       </td>
-                      <td className="px-4 py-4 text-center hidden md:table-cell">
-                        <MiniScoreBar score={a.competitionScore} color="text-orange-400" />
+
+                      {/* Competition */}
+                      <td className="px-5 py-3.5 text-center hidden md:table-cell">
+                        <ScorePill score={a.competitionScore} type="competition" />
                       </td>
-                      <td className="px-4 py-4 text-center hidden md:table-cell">
-                        <MiniScoreBar score={a.demandScore} color="text-blue-400" />
+
+                      {/* Demand */}
+                      <td className="px-5 py-3.5 text-center hidden md:table-cell">
+                        <ScorePill score={a.demandScore} type="demand" />
                       </td>
-                      <td className="px-4 py-4 text-center">
-                        <span className="text-violet-400 font-bold text-sm">{a.overallScore}</span>
+
+                      {/* Overall */}
+                      <td className="px-5 py-3.5 text-center">
+                        <span className="text-base font-bold" style={{ color: '#00D4FF' }}>{a.overallScore}</span>
                       </td>
-                      <td className="px-4 py-4 text-center">
+
+                      {/* Verdict */}
+                      <td className="px-5 py-3.5 text-center">
                         <VerdictBadge verdict={a.verdict} />
                       </td>
-                      <td className="px-4 py-4 text-center hidden sm:table-cell">
-                        <span className="text-gray-500 text-xs">{formatDate(a.createdAt)}</span>
+
+                      {/* Date */}
+                      <td className="px-5 py-3.5 text-center hidden sm:table-cell">
+                        <span className="text-xs" style={{ color: '#475569' }}>{formatDate(a.createdAt)}</span>
                       </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center justify-center gap-2">
+
+                      {/* Actions */}
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center justify-center gap-1">
                           <Link
                             to={`/report/${a._id}`}
-                            className="text-gray-500 hover:text-violet-400 transition-colors p-1.5 rounded-lg hover:bg-violet-500/10"
                             title="View Report"
+                            style={{ color: '#475569', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'color 0.15s, background 0.15s' }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#00D4FF'; e.currentTarget.style.background = 'rgba(0,212,255,0.1)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = 'transparent'; }}
                           >
-                            <ExternalLink size={15} />
+                            <ExternalLink size={14} />
                           </Link>
                           <button
                             onClick={() => handleDelete(a._id)}
                             disabled={deleting === a._id}
-                            className="text-gray-500 hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-500/10 disabled:opacity-40"
                             title="Delete"
+                            style={{ color: '#475569', padding: '6px', borderRadius: '8px', display: 'flex', transition: 'color 0.15s, background 0.15s', opacity: deleting === a._id ? 0.4 : 1 }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#F87171'; e.currentTarget.style.background = 'rgba(239,68,68,0.1)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#475569'; e.currentTarget.style.background = 'transparent'; }}
                           >
-                            <Trash2 size={15} />
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </td>
@@ -243,13 +324,16 @@ const DashboardPage = () => {
 
             {/* Pagination */}
             {pagination.pages > 1 && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-gray-800">
-                <span className="text-gray-500 text-sm">
-                  Showing {Math.min((page - 1) * 8 + 1, pagination.total)}–{Math.min(page * 8, pagination.total)} of {pagination.total}
+              <div
+                className="flex items-center justify-between px-5 py-3.5"
+                style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+              >
+                <span className="text-xs" style={{ color: '#475569' }}>
+                  {Math.min((page-1)*8+1, pagination.total)}–{Math.min(page*8, pagination.total)} of {pagination.total}
                 </span>
                 <div className="flex gap-2">
-                  <button onClick={() => setPage(p => Math.max(p - 1, 1))} disabled={page === 1} className="btn-secondary py-1.5 px-3 text-sm disabled:opacity-40">Prev</button>
-                  <button onClick={() => setPage(p => Math.min(p + 1, pagination.pages))} disabled={page === pagination.pages} className="btn-secondary py-1.5 px-3 text-sm disabled:opacity-40">Next</button>
+                  <button onClick={() => setPage(p => Math.max(p-1,1))}         disabled={page === 1}               className="btn-secondary py-1.5 px-3 text-xs">Prev</button>
+                  <button onClick={() => setPage(p => Math.min(p+1, pagination.pages))} disabled={page === pagination.pages} className="btn-secondary py-1.5 px-3 text-xs">Next</button>
                 </div>
               </div>
             )}
