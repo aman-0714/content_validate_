@@ -49,6 +49,18 @@ exports.analyzeIdea = async (req, res) => {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    // ── AI Semantic Validation ────────────────────────────────────────────────
+    // Fast Groq call (llama-3.1-8b-instant) to catch nonsense that passes the
+    // static checks above — e.g. "THIS IS VERY BEAUTIFUL", "I love pizza"
+    const ideaCheck = await geminiService.validateIdea(trimmed);
+    if (!ideaCheck.valid) {
+      return res.status(400).json({
+        success: false,
+        message: ideaCheck.reason || 'This doesn\'t appear to be a valid content idea. Please enter a real topic you want to create content about.'
+      });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Fetch data in parallel
     const [youtubeResults, redditResults] = await Promise.allSettled([
       youtubeService.searchVideos(title),

@@ -1,5 +1,50 @@
 const axios = require('axios');
 
+// ── Pre-validation: checks if the input is a real content idea ────────────────
+// Returns { valid: true } or { valid: false, reason: '...' }
+exports.validateIdea = async (title) => {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return { valid: true }; // skip validation if no key configured
+
+  try {
+    const response = await axios.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      {
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 100,
+        temperature: 0,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a strict content idea validator. Respond ONLY with valid raw JSON — no markdown, no backticks, no explanation outside the JSON.'
+          },
+          {
+            role: 'user',
+            content: `Is the following a genuine content idea that someone would realistically create a YouTube video, blog post, or online course about?\n\nIDEA: "${title}"\n\nA genuine content idea must:\n- Be about a real topic, skill, concept, or subject\n- Make sense as the title of a video, article, or course\n- NOT be a random sentence, filler phrase, test input, or gibberish\n\nExamples of VALID ideas: "How Electrical Engineers Can Learn DSA", "Beginner Guide to React Hooks", "Top 10 Python Libraries for Data Science"\nExamples of INVALID ideas: "THIS IS VERY BEAUTIFUL", "hello world test", "abc def ghi", "THIS OR THIS", "I like cats very much"\n\nRespond ONLY with this JSON:\n{ "valid": true } or { "valid": false, "reason": "one sentence explaining why" }`
+          }
+        ]
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const text = response.data.choices[0].message.content;
+    const cleaned = text.replace(/```json|```/g, '').trim();
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { valid: true }; // parse failure → let it through
+
+    return JSON.parse(jsonMatch[0]);
+  } catch (err) {
+    console.warn('Idea validation check failed, skipping:', err.message);
+    return { valid: true }; // network/API failure → don't block the user
+  }
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Using Groq API — llama-3.3-70b-versatile for sharper, more specific analysis
 exports.generateReport = async (title, youtubeResults, redditResults, scores) => {
   const apiKey = process.env.GROQ_API_KEY;
