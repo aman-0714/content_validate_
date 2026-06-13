@@ -124,7 +124,7 @@ const HistoryPage = () => {
   const formatDate = (d) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div style={{ minHeight: '100vh', background: '#09090B' }}>
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
@@ -215,8 +215,8 @@ const HistoryPage = () => {
             ))}
           </div>
         ) : analyses.length === 0 ? (
-          <div className="card text-center py-20 fade-in-up">
-            <BarChart3 size={48} className="text-gray-600 mx-auto mb-4" />
+          <div className="card text-center py-20 fade-in-up" style={{ paddingTop: '5rem', paddingBottom: '5rem' }}>
+            <BarChart3 size={48} style={{ color: '#3F3F46', margin: '0 auto 1rem' }} />
             <p className="text-gray-400 text-lg font-semibold">No analyses found</p>
             <p className="text-gray-600 text-sm mt-1 mb-6">
               {search || filter !== 'all' ? 'Try adjusting your filters.' : 'Start by analyzing a content idea.'}
@@ -229,11 +229,13 @@ const HistoryPage = () => {
           <>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {analyses.map((a, i) => (
-                <div
-                  key={a._id}
-                  className="card hover:border-gray-700 transition-all duration-200 hover:scale-[1.01] fade-in-up flex flex-col"
-                  style={{ animationDelay: `${i * 40}ms` }}
-                >
+              <div
+                key={a._id}
+                className="card fade-in-up flex flex-col"
+                style={{ animationDelay: `${i * 40}ms`, transition: 'border-color .2s, transform .2s' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(139,92,246,.3)'; e.currentTarget.style.transform='translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor=''; e.currentTarget.style.transform=''; }}
+              >
                   {/* Title */}
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <p className="text-white font-medium text-sm line-clamp-2 flex-1">{a.title}</p>

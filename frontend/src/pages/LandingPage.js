@@ -1,122 +1,166 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Zap, BarChart3, Brain, Target, ArrowRight, Youtube, MessageCircle, TrendingUp, Star } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import Navbar from '../components/Navbar';
+import {
+  Zap, BarChart3, Brain, Target, ArrowRight,
+  Youtube, TrendingUp, Star, Sparkles, Shield, Clock
+} from 'lucide-react';
 
-const FeatureCard = ({ icon, title, desc }) => (
-  <div className="card hover:border-violet-500/50 transition-all duration-300 group">
-    <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-violet-500/20 transition-colors">
-      {icon}
-    </div>
-    <h3 className="text-white font-semibold text-lg mb-2">{title}</h3>
-    <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
-  </div>
-);
+const FEATURES = [
+  { icon: <BarChart3 size={20} className="text-violet-400" />, title: '4-Metric Scoring', desc: 'Competition, Demand, Originality, and Viral Potential scores calculated from real live data.' },
+  { icon: <Youtube size={20} className="text-red-400" />, title: 'YouTube Intelligence', desc: 'Surface top competing videos with view counts, likes, and engagement metrics.' },
+  { icon: <TrendingUp size={20} className="text-blue-400" />, title: 'Trend Mapping', desc: 'Google Trends and Wikipedia traffic reveal whether interest is rising or cooling.' },
+  { icon: <Brain size={20} className="text-emerald-400" />, title: 'Full AI Report', desc: 'Groq AI generates a structured analysis with actionable recommendations and next steps.' },
+  { icon: <Sparkles size={20} className="text-yellow-400" />, title: 'Idea Enhancement', desc: 'Get 5 AI-refined content angles that outcompete the current landscape.' },
+  { icon: <Target size={20} className="text-pink-400" />, title: 'Save & Compare', desc: 'Every report lives in your dashboard. Track and compare ideas over time.' },
+];
 
 const LandingPage = () => {
+  const { user } = useAuth();
+
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div style={{ minHeight: '100vh', background: '#09090B' }}>
       <Navbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/50 via-gray-950 to-indigo-950/30 pointer-events-none" />
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-violet-600/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden pt-24 pb-28 text-center px-6">
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(139,92,246,0.22) 0%, transparent 70%)',
+        }} />
+        <div style={{
+          position: 'absolute', top: 80, left: '50%', transform: 'translateX(-50%)',
+          width: 600, height: 600, borderRadius: '50%',
+          background: 'rgba(99,102,241,0.07)', filter: 'blur(80px)', pointerEvents: 'none',
+        }} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
-          <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 text-violet-400 text-sm px-4 py-2 rounded-full mb-8">
-            <Zap size={14} /> AI-Powered Content Intelligence
+        <div className="relative max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
+            style={{ background: 'rgba(139,92,246,.1)', border: '1px solid rgba(139,92,246,.2)', color: '#A78BFA' }}>
+            <Zap size={12} /> AI-Powered Content Intelligence
           </div>
 
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-black text-white mb-6 leading-[1.08] tracking-tight">
             Validate Your{' '}
             <span className="gradient-text">Content Ideas</span>
             <br />Before You Create
           </h1>
 
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Stop wasting hours on content that won't perform. Get AI-powered analysis of competition, demand, originality, and viral potential — in seconds.
+            Stop wasting hours on content that won't perform. Get AI-powered analysis of competition,
+            demand, originality, and viral potential — in seconds.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/signup" className="btn-primary text-lg py-4 px-8 inline-flex items-center gap-2 glow">
-              Start Analyzing Free <ArrowRight size={20} />
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link to={user ? '/analyzer' : '/signup'} className="btn-primary"
+              style={{ fontSize: '1rem', padding: '.85rem 2rem' }}>
+              Start Analyzing Free <ArrowRight size={18} />
             </Link>
-            <Link to="/login" className="btn-secondary text-lg py-4 px-8">
+            <Link to="/login" className="btn-secondary"
+              style={{ fontSize: '1rem', padding: '.85rem 2rem' }}>
               Sign In
             </Link>
           </div>
 
-          {/* Social proof */}
-          <div className="mt-12 flex items-center justify-center gap-6 text-gray-500 text-sm">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-1">
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
-              <Star size={14} className="text-yellow-400 fill-yellow-400" />
+              {[...Array(5)].map((_, i) => <Star key={i} size={13} className="text-yellow-400 fill-yellow-400" />)}
               <span className="ml-2">Loved by creators</span>
             </div>
-            <div className="w-px h-4 bg-gray-700" />
-            <span>YouTube + Google Trends + AI</span>
-            <div className="w-px h-4 bg-gray-700" />
-            <span>Free to start</span>
+            <span className="hidden sm:block w-px h-4 bg-gray-700" />
+            <span className="flex items-center gap-1.5"><Shield size={13} className="text-emerald-400" /> No credit card needed</span>
+            <span className="hidden sm:block w-px h-4 bg-gray-700" />
+            <span className="flex items-center gap-1.5"><Clock size={13} className="text-blue-400" /> Under 30 seconds</span>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">How It Works</h2>
-          <p className="text-gray-400 text-lg">Three steps to validate any content idea</p>
+      <section className="max-w-5xl mx-auto px-6 pb-24">
+        <div className="text-center mb-14">
+          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: '#A78BFA' }}>Process</p>
+          <h2 className="text-4xl font-black text-white">Three Steps to Certainty</h2>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {[
-            { step: '01', title: 'Enter Your Idea', desc: 'Type any content topic — blog post, YouTube video, social post, or podcast idea.', icon: '💡' },
-            { step: '02', title: 'We Analyze Everything', desc: 'We search YouTube, Google Trends, and use AI to score competition, demand, and originality.', icon: '🔍' },
-            { step: '03', title: 'Get Your Report', desc: 'Receive a full report with scores, AI recommendations, and better angle suggestions.', icon: '📊' },
-          ].map((item) => (
-            <div key={item.step} className="text-center">
-              <div className="text-5xl mb-4">{item.icon}</div>
-              <div className="text-violet-500 font-bold text-sm mb-2">{item.step}</div>
-              <h3 className="text-white text-xl font-semibold mb-2">{item.title}</h3>
-              <p className="text-gray-400">{item.desc}</p>
+            { n: '01', emoji: '💡', title: 'Enter Your Idea', body: 'Type any content topic — blog post, YouTube video, social post, or podcast idea.' },
+            { n: '02', emoji: '🔬', title: 'We Analyze Everything', body: 'Live YouTube search, Google Trends, Wikipedia traffic, and AI analysis — all in under 30 seconds.' },
+            { n: '03', emoji: '📊', title: 'Get Your Report', body: 'Receive scores, an AI report, and enhanced idea variants that outcompete the current landscape.' },
+          ].map(({ n, emoji, title, body }, idx) => (
+            <div key={n} className="relative text-center">
+              {idx < 2 && (
+                <div className="hidden md:block absolute top-8 left-[calc(100%-12px)] w-full"
+                  style={{ height: 1, background: 'linear-gradient(90deg, rgba(139,92,246,.35), transparent)', zIndex: 10 }} />
+              )}
+              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl flex items-center justify-center text-3xl"
+                style={{ background: 'rgba(139,92,246,.08)', border: '1px solid rgba(139,92,246,.2)' }}>
+                {emoji}
+              </div>
+              <div className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: '#A78BFA' }}>{n}</div>
+              <h3 className="text-white text-lg font-bold mb-2">{title}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">{body}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* Features */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-white mb-4">Everything You Need</h2>
-          <p className="text-gray-400 text-lg">Comprehensive content intelligence in one platform</p>
+      <section className="max-w-6xl mx-auto px-6 pb-28">
+        <div className="text-center mb-14">
+          <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: '#A78BFA' }}>Capabilities</p>
+          <h2 className="text-4xl font-black text-white mb-3">Everything in one report</h2>
+          <p className="text-gray-400 max-w-xl mx-auto">Every analysis gives you the full picture — from raw data to polished AI narrative to better content angles.</p>
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <FeatureCard icon={<BarChart3 className="text-violet-400" />} title="4-Metric Scoring" desc="Competition, Demand, Originality, and Viral Potential scores calculated from real data." />
-          <FeatureCard icon={<Youtube className="text-red-400" />} title="YouTube Analysis" desc="See top 10 competing videos with view counts, likes, and engagement metrics." />
-          <FeatureCard icon={<MessageCircle className="text-blue-400" />} title="Trend Insights" desc="Discover public interest via Google Trends and Wikipedia pageviews." />
-          <FeatureCard icon={<Brain className="text-emerald-400" />} title="AI Report by Gemini" desc="Groq AI generates a full analysis with actionable recommendations." />
-          <FeatureCard icon={<TrendingUp className="text-yellow-400" />} title="Better Angle Generator" desc="Get 5 improved content angles to stand out from the competition." />
-          <FeatureCard icon={<Target className="text-pink-400" />} title="Save & Compare" desc="Save all reports to your dashboard and track your content strategy over time." />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {FEATURES.map(({ icon, title, desc }) => (
+            <div key={title} className="card" style={{ transition: 'border-color .2s, transform .2s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(139,92,246,.35)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = ''; e.currentTarget.style.transform = ''; }}>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style={{ background: 'rgba(255,255,255,.05)' }}>
+                {icon}
+              </div>
+              <h3 className="text-white font-bold text-base mb-2">{title}</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">{desc}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
-        <div className="card bg-gradient-to-br from-violet-900/50 to-indigo-900/50 border-violet-500/30">
-          <h2 className="text-4xl font-bold text-white mb-4">Ready to Validate Your Next Idea?</h2>
-          <p className="text-gray-300 text-lg mb-8">Join creators who make data-driven content decisions.</p>
-          <Link to="/signup" className="btn-primary text-lg py-4 px-10 inline-flex items-center gap-2">
-            Get Started Free <ArrowRight size={20} />
-          </Link>
+      <section className="max-w-3xl mx-auto px-6 pb-28 text-center">
+        <div className="card-brand" style={{ padding: '3.5rem 2rem' }}>
+          <Sparkles size={32} className="text-violet-400 mx-auto mb-5" />
+          <h2 className="text-4xl font-black text-white mb-4">Ready to validate your next idea?</h2>
+          <p className="text-gray-400 mb-8 max-w-lg mx-auto">
+            Join creators who make data-driven content decisions. Free to start, no card required.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to={user ? '/analyzer' : '/signup'} className="btn-primary"
+              style={{ fontSize: '1rem', padding: '.85rem 2.5rem' }}>
+              {user ? 'Go to Analyzer' : 'Create Free Account'} <ArrowRight size={18} />
+            </Link>
+            {!user && (
+              <Link to="/login" className="btn-secondary"
+                style={{ fontSize: '1rem', padding: '.85rem 2.5rem' }}>
+                Sign in
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 py-8 text-center text-gray-500 text-sm">
-        <p>© 2024 IdeaValidator. Built with ❤️ for content creators.</p>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,.06)' }} className="py-8 text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="w-6 h-6 rounded-md flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg,#8B5CF6,#6D28D9)' }}>
+            <Zap size={13} className="text-white" />
+          </div>
+          <span className="font-bold text-sm gradient-text">IdeaValidator</span>
+        </div>
+        <p className="text-gray-600 text-xs">© {new Date().getFullYear()} IdeaValidator. Built for content creators.</p>
       </footer>
     </div>
   );

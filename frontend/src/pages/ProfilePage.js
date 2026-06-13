@@ -21,7 +21,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div style={{ minHeight: '100vh', background: '#09090B' }}>
       <Navbar />
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12">
 
@@ -78,7 +78,7 @@ const ProfilePage = () => {
         </div>
 
         {/* Tech Stack Info */}
-        <div className="card mb-6 bg-gradient-to-br from-gray-900 to-gray-900/50">
+        <div className="card mb-6">
           <h3 className="text-white font-semibold mb-3">🛠️ Project Tech Stack</h3>
           <div className="grid grid-cols-2 gap-2 text-sm">
             {[
