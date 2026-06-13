@@ -14,6 +14,41 @@ exports.analyzeIdea = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Content idea title is required' });
     }
 
+    // ── Input Validation ──────────────────────────────────────────────────────
+    const trimmed = title.trim();
+
+    // Too short to be meaningful
+    if (trimmed.length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a more descriptive content idea (at least 10 characters).'
+      });
+    }
+
+    // Repeating words / gibberish (e.g. "THIS OR THIS", "abc abc abc")
+    const inputWords = trimmed.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const uniqueInputWords = new Set(inputWords);
+    if (inputWords.length > 1 && uniqueInputWords.size / inputWords.length < 0.6) {
+      return res.status(400).json({
+        success: false,
+        message: "This doesn't look like a valid content idea. Please describe your topic more clearly."
+      });
+    }
+
+    // Only stop words / filler with no real meaning
+    const INPUT_STOP = new Set([
+      'the','a','an','and','or','but','is','are','was','were','this','that',
+      'these','those','it','its','for','to','of','in','on','at','by','with'
+    ]);
+    const meaningfulWords = inputWords.filter(w => !INPUT_STOP.has(w));
+    if (meaningfulWords.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please enter a real content idea with at least one meaningful word.'
+      });
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Fetch data in parallel
     const [youtubeResults, redditResults] = await Promise.allSettled([
       youtubeService.searchVideos(title),

@@ -31,7 +31,7 @@ exports.searchVideos = async (query) => {
       }
     });
 
-    return statsResponse.data.items.map(video => ({
+    const rawResults = statsResponse.data.items.map(video => ({
       videoId: video.id,
       title: video.snippet.title,
       channelName: video.snippet.channelTitle,
@@ -42,11 +42,43 @@ exports.searchVideos = async (query) => {
       commentCount: parseInt(video.statistics.commentCount || 0),
       url: `https://www.youtube.com/watch?v=${video.id}`
     }));
+
+    return filterRelevantVideos(rawResults, query);
   } catch (error) {
     console.error('YouTube API error:', error.response?.data?.error?.message || error.message);
     return getMockYouTubeData(query);
   }
 };
+
+// ── Relevance Filter ─────────────────────────────────────────────────────────
+// Removes videos whose titles share no meaningful words with the query.
+// Prevents junk results when the query is a common word ("this", "that", etc.)
+function filterRelevantVideos(videos, query) {
+  const FILTER_STOP = new Set([
+    'the','a','an','and','or','but','is','are','was','were','this','that',
+    'these','those','it','its','for','to','of','in','on','at','by','with',
+    'how','what','why','who','when','where','can','will','would','should'
+  ]);
+
+  const queryWords = query
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !FILTER_STOP.has(w));
+
+  // If no meaningful query words, can't filter — return as-is
+  if (queryWords.length === 0) return videos;
+
+  return videos.filter(video => {
+    const titleWords = (video.title || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/);
+    // Keep video only if at least one meaningful query word appears in its title
+    return queryWords.some(qw => titleWords.includes(qw));
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function getMockYouTubeData(query) {
   return Array.from({ length: 5 }, (_, i) => ({
