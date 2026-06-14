@@ -14,49 +14,80 @@ exports.analyzeIdea = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Content idea title is required' });
     }
 
-    // ── Input Validation ──────────────────────────────────────────────────────
+    // ── Layer 1: Static Input Validation ─────────────────────────────────────
     const trimmed = title.trim();
 
-    // Too short to be meaningful
-    if (trimmed.length < 10) {
+    // Too short
+    if (trimmed.length < 8) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter a more descriptive content idea (at least 10 characters).'
+        message: 'Your idea is too short. Please describe the topic you want to create content about (e.g. "Beginner Guide to React Hooks").'
       });
     }
 
-    // Repeating words / gibberish (e.g. "THIS OR THIS", "abc abc abc")
-    const inputWords = trimmed.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-    const uniqueInputWords = new Set(inputWords);
-    if (inputWords.length > 1 && uniqueInputWords.size / inputWords.length < 0.6) {
+    // No real letters at all
+    if (!/[a-zA-Z]/.test(trimmed)) {
       return res.status(400).json({
         success: false,
-        message: "This doesn't look like a valid content idea. Please describe your topic more clearly."
+        message: 'Please enter a content idea using words, not just symbols or numbers.'
       });
     }
 
-    // Only stop words / filler with no real meaning
-    const INPUT_STOP = new Set([
+    // Single character repeated (aaaaaaa, ........)
+    if (/^(.)(\1+\s*)+$/.test(trimmed)) {
+      return res.status(400).json({
+        success: false,
+        message: 'That doesn\'t look like a content idea. Try something like "Python for Data Science Beginners".'
+      });
+    }
+
+    const STOP = new Set([
       'the','a','an','and','or','but','is','are','was','were','this','that',
-      'these','those','it','its','for','to','of','in','on','at','by','with'
+      'these','those','it','its','for','to','of','in','on','at','by','with',
+      'i','me','my','we','you','he','she','they','do','did','be','been',
+      'have','has','had','will','would','could','should','may','might',
+      'very','so','just','really','quite','also','too','not','no','yes',
+      'hi','hello','hey','test','ok','okay','lol',
     ]);
-    const meaningfulWords = inputWords.filter(w => !INPUT_STOP.has(w));
-    if (meaningfulWords.length === 0) {
+
+    const words = trimmed.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+    const meaningful = words.filter(w => w.length > 2 && !STOP.has(w));
+
+    if (meaningful.length === 0) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter a real content idea with at least one meaningful word.'
+        message: 'Your input contains only common words with no clear topic. Please describe the subject of your content idea.'
+      });
+    }
+
+    // High repetition ratio
+    const unique = new Set(words);
+    if (words.length > 2 && unique.size / words.length < 0.5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Your idea has too many repeated words. Please enter a clear, distinct content topic.'
+      });
+    }
+
+    // Key-mash detection — long words with no vowels
+    const longWords = meaningful.filter(w => w.length >= 4);
+    const noVowelWords = longWords.filter(w => !/[aeiou]/.test(w));
+    if (longWords.length > 0 && noVowelWords.length / longWords.length > 0.6) {
+      return res.status(400).json({
+        success: false,
+        message: 'That looks like random characters. Please type a real content topic you want to validate.'
       });
     }
     // ─────────────────────────────────────────────────────────────────────────
 
-    // ── AI Semantic Validation ────────────────────────────────────────────────
-    // Fast Groq call (llama-3.1-8b-instant) to catch nonsense that passes the
-    // static checks above — e.g. "THIS IS VERY BEAUTIFUL", "I love pizza"
+    // ── Layer 2: AI Semantic Validation ───────────────────────────────────────
+    // Catches cases static checks miss: "I love pizza", "sky is blue",
+    // "this is very beautiful", single-word celebrities, etc.
     const ideaCheck = await geminiService.validateIdea(trimmed);
     if (!ideaCheck.valid) {
       return res.status(400).json({
         success: false,
-        message: ideaCheck.reason || 'This doesn\'t appear to be a valid content idea. Please enter a real topic you want to create content about.'
+        message: ideaCheck.reason || 'This doesn\'t appear to be a content idea someone would create a video or article about. Please enter a real topic.'
       });
     }
     // ─────────────────────────────────────────────────────────────────────────
